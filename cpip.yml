@@ -3,5 +3,5 @@ channels:
 - anaconda
 - conda-forge
 dependencies:
-- conda
+- conda>=4.4
 - conda-pack
