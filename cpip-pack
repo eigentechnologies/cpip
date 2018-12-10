@@ -1,0 +1,377 @@
+#!/bin/bash
+
+unset_compiler_env()
+{
+    unset AR
+    unset CPP
+    unset CC
+    unset CXX
+    unset LDSHARED
+
+    unset ARFLAGS
+    unset CPPFLAGS
+    unset CFLAGS
+    unset CXXFLAGS
+    unset LDFLAGS
+}
+
+install_cross_compilers()
+{
+    if [[ -z $compilers_installed ]]; then
+        echo "$info" "installing cross-compilers for pip packages..."
+        conda install -c anaconda "$cc_pkg" "$cxx_pkg" "$gfortran_pkg" --yes $quiet
+        unset_compiler_env  # <-- unset variables that override distutils build configuration
+        compilers_installed=true
+    fi
+}
+
+set_poetry_config()
+{
+    venvs_create="$(poetry config settings.virtualenvs.create)"  # <-- save previous value
+    poetry config settings.virtualenvs.create "false"
+}
+
+restore_poetry_config()
+{
+    if [[ $venvs_create ]]; then
+        poetry config settings.virtualenvs.create "$venvs_create"
+        unset venvs_create
+    fi
+}
+
+pip_cache_cleanup()
+{
+    if [[ $no_pip_cache ]]; then
+        rm -rf "$tmp_dir"
+    fi
+}
+
+exit_trap()
+{
+    local lc="$BASH_COMMAND" rc=$?
+    if [[ $rc -ne 0 ]]; then
+        echo "$error" "Command [${red}$lc${reset}] exited with code [${red}$rc${reset}]"
+    fi
+    
+    pip_cache_cleanup
+    restore_poetry_config
+}
+
+usage()
+{
+    # NOTE: if you update this print message, please update README.md
+    echo "$help" "usage: $script_name --name PROJECT --file FILE [--file FILE]..."
+    echo "$s___" "       $s__________ [--poetry DIR] [--version VERSION] [--output DIR]"
+    echo "$s___" "       $s__________ [--no-dev] [--no-pip-cache] [--force] [--quiet]"
+    echo "$s___" "       $s__________ [--help]"
+}
+
+advanced_usage()
+{
+    # NOTE: if you update this print message, please update README.md
+    usage
+    echo "$s___"
+    echo "$s___" "Package all dependencies into a portable conda environment tarball"
+    echo "$s___"
+    echo "$s___" "required arguments:"
+    echo "$s___" "  --name, -n PROJECT        Name of the project to package. Will be used for"
+    echo "$s___" "                            the name in the output file."
+    echo "$s___" "  --file, -f FILE           Conda environment file. This option can be used"
+    echo "$s___" "                            multiple times to specify multiple files. The"
+    echo "$s___" "                            environment will be updated in the order that they"
+    echo "$s___" "                            are given on the command line."
+    echo "$s___"
+    echo "$s___" "optional arguments:"
+    echo "$s___" "  --poetry, -p DIR          Poetry project directory."
+    echo "$s___" "  --version, -v VERSION     Version number to be included in output file name."
+    echo "$s___" "  --output, -o DIR          Directory where the final tarball will go."
+    echo "$s___" "                            Otherwise, tarball will be ouputed to the current"
+    echo "$s___" "                            working directory."
+    echo "$s___" "  --no-dev                  Do not install dev dependencies for Poetry."
+    echo "$s___" "  --no-pip-cache            Do not use cpip's pip cache directory. This will"
+    echo "$s___" "                            be slower for repeated installs. The tradeoff is"
+    echo "$s___" "                            that it will force downloads of the most recent"
+    echo "$s___" "                            package version."
+    echo "$s___" "  --force                   Overwrite any existing archive at the output path."
+    echo "$s___" "  --quiet, -q               Suppress output for commands."
+    echo "$s___" "  --help, -h                Show this help message then exit."
+}
+
+files=()
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -n|--name)
+            if [[ $name ]]; then
+                echo "$error" "'--name' option cannot be used more than once"
+                usage
+                exit 1
+            fi
+            name="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        -f|--file)
+            files+=("$2")
+            shift # past argument
+            shift # past value
+            ;;
+        -p|--poetry)
+            if [[ $poetry_dir ]]; then
+                echo "$error" "'--poetry' option cannot be used more than once"
+                usage
+                exit 1
+            fi
+            poetry_dir="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        -v|--version)
+            if [[ $version ]]; then
+                echo "$error" "'--version' option cannot be used more than once"
+                usage
+                exit 1
+            fi
+            version="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        -o|--output)
+            if [[ $output_dir ]]; then
+                echo "$error" "'--output' option cannot be used more than once"
+                usage
+                exit 1
+            fi
+            output_dir="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        --no-dev)
+            if [[ $no_dev ]]; then
+                echo "$error" "'--no-dev' option cannot be used more than once"
+                usage
+                exit 1
+            fi
+            no_dev="$1"
+            shift # past argument
+            ;;
+        --no-pip-cache)
+            if [[ $no_pip_cache ]]; then
+                echo "$error" "'--no-pip-cache' option cannot be used more than once"
+                usage
+                exit 1
+            fi
+            no_pip_cache=true
+            shift # past argument
+            ;;
+        --force)
+            if [[ $force ]]; then
+                echo "$error" "'--force' option cannot be used more than once"
+                usage
+                exit 1
+            fi
+            force="$1"
+            shift # past argument
+            ;;
+        -q|--quiet)
+            if [[ $quiet ]]; then
+                echo "$error" "'--quiet' option cannot be used more than once"
+                usage
+                exit 1
+            fi
+            quiet="$1"
+            export PIP_QUIET=1
+            shift # past argument
+            ;;
+        -h|--help)
+            advanced_usage
+            exit 0
+            ;;
+        *)
+            echo "$error" "'$1' not a recognized option"
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+# check for required options
+if [[ -z $name ]]; then
+    echo "$error" "'--name' option is required"
+    usage
+    exit 1
+fi
+if [[ ${#files[@]} -eq 0 ]]; then
+    echo "$error" "'--file' option is required (atleast once)"
+    usage
+    exit 1
+fi
+
+# make sure environment files exist
+for file in ${files[@]}; do
+    if [[ ! -f $file ]]; then
+        echo "$error" "'$file' is either not a file or it doesn't exist"
+        usage
+        exit 1
+    fi
+done
+
+# set output file env
+output_name="$name"
+if [[ $version ]]; then
+    if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then 
+        echo "$warning" "'$version' does not match numerical format X.Y.Z"
+    fi 
+    output_name+="-$version"
+fi
+output_file="$output_name.tar.gz"
+
+# set full output path
+output="$output_file"
+if [[ $output_dir ]]; then
+    if [[ ! -d $output_dir ]]; then
+        echo "$error" "'$output_dir' is not a directory or does not exist"
+        exit 1
+    fi 
+    output="$output_dir/$output_file"
+fi
+
+# check if output already exists
+if [[ -f $output || -d $output ]]; then
+    if [[ -z $force ]]; then
+        echo "$error" "output file '$output' already exists; use --force option to overwrite"
+        exit 1
+    fi
+fi 
+
+# exit as soon as a command fails and print error
+trap exit_trap EXIT
+set -e
+
+conda_initiate
+
+# set pip cache directory
+if [[ $no_pip_cache ]]; then
+    tmp_dir="$(mktemp -d)"
+    export PIP_CACHE_DIR="$tmp_dir/pip"
+else
+    set_pip_cache_dir
+    echo "$info" "using pip cache directory '$PIP_CACHE_DIR'"
+    rm -rf "$PIP_CACHE_DIR/wheels"
+fi
+
+remove_old_env
+
+pip_files=()
+
+# scan for pip dependencies
+for file in ${files[@]}; do
+    # warn user for pip dependencies
+    if [[ $(cat "$file" | egrep "^\s*-\s+pip:\s*$" | wc -l) -gt 0 ]]; then
+        echo "$warning" "found pip dependencies in '$file'; this is not recommended!"
+        pip_files+=("$file")
+    fi
+done
+
+# run dummy installation to cache cross-compiled pip .whl files
+if [[ ${#pip_files[@]} -gt 0 ]]; then
+    pip_install="${bold}[${yellow}pip-install${reset}${bold}]${reset}"
+    echo "$warning" "pip dependencies detected in conda files: running $pip_install..."
+
+    # change logging for pip_install
+    tag="$default_tag $pip_install"
+    set_logging
+
+    # create and ENTER target environment
+    conda_env_create
+    conda activate "$env"
+    
+    install_cross_compilers
+    
+    # update environment to install the pip dependencies 
+    for file in ${pip_files[@]}; do
+        conda_env_update
+    done
+
+    # finished; EXIT target environment and cleanup
+    conda deactivate
+    conda_env_remove
+    echo "$info" "Complete!"
+    
+    # revert logging back to default settings
+    tag="$default_tag"
+    set_logging
+fi
+
+# create and ENTER target environment
+conda_env_create
+conda activate "$env"
+revision=0  # <-- track latest conda revision
+
+# update the environment 
+for file in ${files[@]}; do
+    conda_env_update
+    ((++revision))  # <-- increment conda revision
+done
+
+# install pip packages in target environment
+if [[ $poetry_dir ]]; then
+    poetry_install="${bold}[${green}poetry-install${reset}${bold}]${reset}"
+    echo "$info" "Poetry project specified in '$poetry_dir': running $poetry_install..."
+
+    # change logging for poetry_install
+    tag="$default_tag $poetry_install"
+    set_logging
+   
+    install_cross_compilers
+    set_poetry_config
+
+    # TODO: remove this when Poetry is more capable (see README)
+    # set Poetry environment to yield independent cache
+    export XDG_CACHE_HOME="$CONDA_PREFIX/xdg_cache"
+
+    # install pip packages
+    echo "$info" "installing pip packages via Poetry..."
+    cd "$poetry_dir"
+    poetry install $no_dev $quiet
+    cd -
+
+    restore_poetry_config
+
+    # TODO: remove this when Poetry is more capable (see README)
+    # remove cache and revert environment
+    rm -rf "$XDG_CACHE_HOME"
+    unset XDG_CACHE_HOME
+
+    # uninstall cross-compilers by reverting conda revision
+    echo "$info" "uninstalling cross-compilers..."
+    conda install --revision "$revision" --yes $quiet
+
+    echo "$info" "Complete!"
+
+    # revert logging back to default settings
+    tag="$default_tag"
+    set_logging
+fi
+
+# EXIT target environment and perform cleanup
+conda deactivate
+pip_cache_cleanup
+
+# run conda-pack to package the environment, then clean it up
+echo "$info" "packaging environment via conda-pack..."
+conda pack -n "$env" -o "$output" --arcroot "$output_name" $force $quiet
+
+output="$(readlink -e "$output")"  # <-- set to absolute path
+
+# NOTE: if you update this print message, please update README.md
+echo "$info" "Complete! Environment is now packaged in $output"
+echo "$help" "[Instructions]"
+echo "$s___"
+echo "$s___" "  Initial Setup:"
+echo "$s___" "    1. untar archive        --> tar -xf $output_file"
+echo "$s___" "    2. activate environment --> source $output_name/bin/activate"
+echo "$s___" "    3. fix path prefixes    --> conda unpack"
+echo "$s___"
+echo "$s___" "  Normal Use:"
+echo "$s___" "    *  activate             --> source $output_name/bin/activate"
+echo "$s___" "    *  deactivate           --> source deactivate"

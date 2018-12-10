@@ -1,0 +1,117 @@
+#!/bin/bash
+
+exit_trap()
+{
+    local lc="$BASH_COMMAND" rc=$?
+    if [[ $rc -ne 0 ]]; then
+        echo "$error" "Command [${red}$lc${reset}] exited with code [${red}$rc${reset}]"
+    fi
+}
+
+usage()
+{
+    # NOTE: if you update this print message, please update README.md
+    echo "$help" "usage: $script_name <arguments> [options]"
+    echo "$s___"
+    echo "$s___" "arguments: (at least one is required)"
+    echo "$s___" "  --slip, -s                Remove source cache, lockfiles, index cache, and"
+    echo "$s___" "                            packages for conda."
+    echo "$s___" "  --tarballs, -t            Remove downloaded tarballs for conda. Best to use"
+    echo "$s___" "                            only if there is a shortage of disk space."
+    echo "$s___" "  --pip-cache, -p           Remove cpip's pip cache."
+    echo "$s___"
+    echo "$s___" "options:"
+    echo "$s___" "  --yes, -y                 Consent to deletion without prompts."
+    echo "$s___" "  --quiet, -q               Suppress output for commands."
+    echo "$s___" "  --help, -h                Show this help message then exit."
+}
+
+if [[ $# -eq 0 ]]; then
+    echo "$error" "at least one argument is required"
+    usage
+    exit 1
+fi
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -s|--slip)
+            if [[ $slip ]]; then
+                echo "$error" "'--slip' option cannot be used more than once"
+                usage
+                exit 1
+            fi
+            slip="$1"
+            shift # past argument
+            ;;
+        -t|--tarballs)
+            if [[ $tarballs ]]; then
+                echo "$error" "'--tarballs' option cannot be used more than once"
+                usage
+                exit 1
+            fi
+            tarballs="$1"
+            shift # past argument
+            ;;
+        -p|--pip-cache)
+            if [[ $pip ]]; then
+                echo "$error" "'--pip-cache' option cannot be used more than once"
+                usage
+                exit 1
+            fi
+            pip_cache="$1"
+            shift # past argument
+            ;;
+        -y|--yes)
+            if [[ $yes ]]; then
+                echo "$error" "'--yes' option cannot be used more than once"
+                usage
+                exit 1
+            fi
+            yes="$1"
+            shift # past argument
+            ;;
+        -q|--quiet)
+            if [[ $quiet ]]; then
+                echo "$error" "'--quiet' option cannot be used more than once"
+                usage
+                exit 1
+            fi
+            quiet="$1"
+            export PIP_QUIET=1
+            shift # past argument
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "$error" "'$1' not a recognized argument/option"
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+# exit as soon as a command fails and print error
+trap exit_trap EXIT
+set -e
+
+conda_initiate
+remove_old_env
+
+if [[ $slip ]]; then
+    echo "$info" "removing source cache, lockfiles, index cache, and packages for conda..."
+    conda clean -slip $yes $quiet
+fi
+
+if [[ $tarballs ]]; then
+    echo "$info" "removing downloaded tarballs for conda..."
+    conda clean --tarballs $yes $quiet
+fi
+
+if [[ $pip_cache ]]; then
+    set_pip_cache_dir
+    echo "$info" "clearing pip cache directory '$PIP_CACHE_DIR'..."
+    rm -rf "$PIP_CACHE_DIR"
+fi
+echo "$info" "Done!"

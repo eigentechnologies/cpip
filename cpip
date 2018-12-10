@@ -1,0 +1,134 @@
+#!/bin/bash
+
+# store script name and empty string equivalent
+script_name="$(basename -- "$0")"
+script_dir="$(dirname -- "$0")"
+set_script_space()
+{
+    s__________="$(len=${#script_name}; ch=' '; printf '%*s' "$len" | tr ' ' "$ch")"
+}
+set_script_space
+
+# set colors
+bold=`tput bold`
+red=`tput setaf 1`
+green=`tput setaf 2`
+yellow=`tput setaf 3`
+blue=`tput setaf 4`
+magenta=`tput setaf 5`
+cyan=`tput setaf 6`
+reset=`tput sgr0`
+
+# set print commands
+default_tag="${bold}${magenta}[${cyan}$script_name${magenta}]$reset"
+
+# store empty string equivalent of 'info' and 'help'
+four_space="[$script_name] FOUR:"
+s___="$(len=${#four_space}; ch=' '; printf '%*s' "$len" | tr ' ' "$ch")"
+
+set_logging()
+{
+    info="$tag ${green}INFO:${reset}"
+    warning="$tag ${yellow}WARNING:${reset}"
+    error="$tag ${red}ERROR:${reset}"
+    help="$tag ${blue}HELP:${reset}"
+}
+
+tag="$default_tag"
+set_logging
+
+# check os to find the right cross compilers
+if [[ $OSTYPE == "linux-gnu" ]]; then
+    cc_pkg="gcc_linux-64"
+    cxx_pkg="gxx_linux-64"
+    gfortran_pkg="gfortran_linux-64"
+elif [[ $OSTYPE == "darwin"* ]]; then
+    cc_pkg="clang_osx-64"
+    cxx_pkg="clangxx_osx-64"
+    gfortran_pkg="gfortran_osx-64"
+else
+    echo "$error" "OS not supported!"
+    exit 1
+fi
+
+env="cpip_env"
+pip_cache_dir=
+
+conda_initiate()
+{
+    source "$CONDA_PREFIX/etc/profile.d/conda.sh"
+}
+
+conda_env_create()
+{
+    echo "$info" "creating environment..."
+    conda create -n "$env" --yes $quiet
+}
+
+conda_env_update()
+{
+    echo "$info" "updating environment with '$file' file..."
+    conda env update -n "$env" -f "$file" $quiet
+}
+
+conda_env_remove()
+{
+    echo "$info" "removing environment..."
+    conda env remove -n "$env" --yes $quiet
+}
+
+remove_old_env()
+{
+    if [[ $(conda env list | grep "^$env " | wc -l) -gt 0 ]]; then
+        echo "$info" "found old environment, removing..."
+        conda_env_remove
+    fi
+}
+
+set_pip_cache_dir()
+{
+    export PIP_CACHE_DIR="$CONDA_PREFIX/pip/cache"
+}
+
+usage()
+{
+    # NOTE: if you update this print message, please update README.md
+    echo "$help" "usage: $script_name <command> [options]"
+    echo "$s___"
+    echo "$s___" "Portable packaging for conda + pip environments"
+    echo "$s___"
+    echo "$s___" "commands:"
+    echo "$s___" "  pack                      Package environment into a tarball."
+    echo "$s___" "  clean                     Cleanup build/packaging cache."
+    echo "$s___"
+    echo "$s___" "options:"
+    echo "$s___" "  --help, -h                Show this help message then exit."
+}
+
+if [[ $# -eq 0 ]]; then
+    usage
+    exit 0
+fi
+
+case $1 in
+    pack)
+        script_name+=" $1"
+        set_script_space
+        shift
+        source "$script_dir/cpip-pack"
+        ;;
+    clean)
+        script_name+=" $1"
+        set_script_space
+        shift
+        source "$script_dir/cpip-clean"
+        ;;
+    -h|--help)
+        advanced_usage
+        ;;
+    *)
+        echo "$error" "'$1' not a recognized command"
+        usage
+        exit 1
+        ;;
+esac

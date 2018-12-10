@@ -1,0 +1,7 @@
+name: env-pack
+channels:
+- anaconda
+- conda-forge
+dependencies:
+- conda
+- conda-pack
