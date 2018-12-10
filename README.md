@@ -52,10 +52,9 @@ given `conda` environment files
                                             Otherwise, tarball will be ouputed to the current
                                             working directory.
                   --no-dev                  Do not install dev dependencies for Poetry.
-                  --no-pip-cache            Do not use cpip's pip cache directory. This will
-                                            be slower for repeated installs. The tradeoff is
-                                            that it will force downloads of the most recent
-                                            package version.
+                  --no-pip-cache            Do not use cpip's pip cache directory. This
+                                            emulates using 'cpip clean' to clear the pip cache
+                                            without actually doing so.
                   --force                   Overwrite any existing archive at the output path.
                   --quiet, -q               Suppress output for commands.
                   --help, -h                Show this help message then exit.
