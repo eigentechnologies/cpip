@@ -1,4 +1,4 @@
-name: env-pack
+name: cpip
 channels:
 - anaconda
 - conda-forge
