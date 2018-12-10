@@ -72,7 +72,7 @@ given `conda` environment files
 
 ## Cleaning Caches
 
-use `cpip clean` command to clean the conda package and/or pip caches
+Use `cpip clean` command to clean the conda and/or pip caches
 
 ## Other Things to Note
 
