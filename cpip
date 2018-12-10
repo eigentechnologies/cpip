@@ -99,7 +99,7 @@ usage()
     echo "$s___"
     echo "$s___" "commands:"
     echo "$s___" "  pack                      Package environment into a tarball."
-    echo "$s___" "  clean                     Cleanup build/packaging cache."
+    echo "$s___" "  clean                     Cleanup conda and/or pip cache."
     echo "$s___"
     echo "$s___" "options:"
     echo "$s___" "  --help, -h                Show this help message then exit."
@@ -124,7 +124,7 @@ case $1 in
         source "$script_dir/cpip-clean"
         ;;
     -h|--help)
-        advanced_usage
+        usage
         ;;
     *)
         echo "$error" "'$1' not a recognized command"
