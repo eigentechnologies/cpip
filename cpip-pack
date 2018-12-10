@@ -256,7 +256,6 @@ if [[ $no_pip_cache ]]; then
 else
     set_pip_cache_dir
     echo "$info" "using pip cache directory '$PIP_CACHE_DIR'"
-    rm -rf "$PIP_CACHE_DIR/wheels"
 fi
 
 remove_old_env
