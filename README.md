@@ -68,6 +68,7 @@ given `conda` environment files
                 Normal Use:
                   *  activate             --> source <archive-root>/bin/activate
                   *  deactivate           --> source deactivate
+                  *  view dependencies    --> cat <archive-root>/<archive-name>.yml
 
 ## Cleaning Caches
 
@@ -89,7 +90,16 @@ It is recommended to use a `poetry` project to define all the `pip`
 packages in your project; this allows for lockfiles to pin package
 versions properly. If you decide to use `poetry`, it makes sense to
 move ALL `pip` dependencies from the `conda` environment `.yml` files
-to a `poetry` project `.toml` file. 
+to a `poetry` project `.toml` file.
+
+If there are `pip` dependencies in the `conda` environment file,
+a mode called `pip_install` will be executed, which forces a dummy
+install of all the environment files with `pip` dependencies. Using
+`poetry` exclusively for `pip` dependencies will trim the extra
+execution time caused by `pip_install`. Another way to slim down
+the execution time is to separate the `pip` dependencies and the
+`conda` dependencies into seperate files as much as possible, since
+only files with `pip` dependencies are included in `pip_install` mode.
 
 #### Order of Environments
 This tool can take more than one `conda` environment file.

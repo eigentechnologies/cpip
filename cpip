@@ -52,7 +52,6 @@ else
 fi
 
 env="cpip_env"
-pip_cache_dir=
 
 conda_initiate()
 {
@@ -88,6 +87,15 @@ remove_old_env()
 set_pip_cache_dir()
 {
     export PIP_CACHE_DIR="$CONDA_PREFIX/pip/cache"
+}
+
+exit_message()
+{
+    # this function must be used at the beginning of the exit trap
+    local lc="$BASH_COMMAND" rc=$?
+    if [[ $rc -ne 0 ]]; then
+        echo "$error" "Encountered error during execution; exiting now!"
+    fi
 }
 
 usage()

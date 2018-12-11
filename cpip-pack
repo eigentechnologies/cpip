@@ -48,11 +48,7 @@ pip_cache_cleanup()
 
 exit_trap()
 {
-    local lc="$BASH_COMMAND" rc=$?
-    if [[ $rc -ne 0 ]]; then
-        echo "$error" "Command [${red}$lc${reset}] exited with code [${red}$rc${reset}]"
-    fi
-    
+    exit_message
     pip_cache_cleanup
     restore_poetry_config
 }
@@ -351,18 +347,23 @@ if [[ $poetry_dir ]]; then
     set_logging
 fi
 
+# export environment to .yml file
+echo "$info" "exporting pinned dependencies to '$output_name.yml'..."
+conda env export | grep -v "^prefix: " > "$CONDA_PREFIX/$output_name.yml"
+
+# run conda-pack to package the environment
+echo "$info" "packaging environment via conda-pack..."
+conda pack -o "$output" --arcroot "$output_name" $force $quiet
+
 # EXIT target environment and perform cleanup
 conda deactivate
 pip_cache_cleanup
 
-# run conda-pack to package the environment, then clean it up
-echo "$info" "packaging environment via conda-pack..."
-conda pack -n "$env" -o "$output" --arcroot "$output_name" $force $quiet
 
 output="$(readlink -e "$output")"  # <-- set to absolute path
 
 # NOTE: if you update this print message, please update README.md
-echo "$info" "Complete! Environment is now packaged in $output"
+echo "$info" "Complete! Environment is now packaged in '$output'"
 echo "$help" "[Instructions]"
 echo "$s___"
 echo "$s___" "  Initial Setup:"
@@ -373,3 +374,4 @@ echo "$s___"
 echo "$s___" "  Normal Use:"
 echo "$s___" "    *  activate             --> source $output_name/bin/activate"
 echo "$s___" "    *  deactivate           --> source deactivate"
+echo "$s___" "    *  view dependencies    --> cat $output_name/$output_name.yml"

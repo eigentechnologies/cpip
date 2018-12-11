@@ -2,10 +2,7 @@
 
 exit_trap()
 {
-    local lc="$BASH_COMMAND" rc=$?
-    if [[ $rc -ne 0 ]]; then
-        echo "$error" "Command [${red}$lc${reset}] exited with code [${red}$rc${reset}]"
-    fi
+    exit_message
 }
 
 usage()
