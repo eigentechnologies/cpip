@@ -348,8 +348,11 @@ if [[ $poetry_dir ]]; then
 fi
 
 # export environment to .yml file
+dep_name="dependencies"
+dep_dir="$CONDA_PREFIX/$dep_name"
 echo "$info" "exporting pinned dependencies to '$output_name.yml'..."
-conda env export | grep -v "^prefix: " > "$CONDA_PREFIX/$output_name.yml"
+mkdir -p "$dep_dir"
+conda env export | grep -v "^prefix: " > "$dep_dir/$output_name.yml"
 
 # run conda-pack to package the environment
 echo "$info" "packaging environment via conda-pack..."
@@ -374,4 +377,4 @@ echo "$s___"
 echo "$s___" "  Normal Use:"
 echo "$s___" "    *  activate             --> source $output_name/bin/activate"
 echo "$s___" "    *  deactivate           --> source deactivate"
-echo "$s___" "    *  view dependencies    --> cat $output_name/$output_name.yml"
+echo "$s___" "    *  view dependencies    --> cat $output_name/$dep_name/$output_name.yml"

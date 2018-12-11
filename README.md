@@ -68,7 +68,7 @@ given `conda` environment files
                 Normal Use:
                   *  activate             --> source <archive-root>/bin/activate
                   *  deactivate           --> source deactivate
-                  *  view dependencies    --> cat <archive-root>/<archive-name>.yml
+                  *  view dependencies    --> cat <archive-root>/dependencies/<archive-name>.yml
 
 ## Cleaning Caches
 
