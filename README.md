@@ -35,8 +35,8 @@ Installed via `conda`:
 #### 3) Run 'cpip pack'
                 usage: cpip pack --name PROJECT --file FILE [--file FILE]...
                                  [--poetry DIR] [--version VERSION] [--output DIR]
-                                 [--no-dev] [--unlock] [--no-pip-cache] [--force]
-                                 [--quiet] [--help]
+                                 [--no-dev] [--unlock] [--force] [--quiet]
+                                 [--help]
                
                 Package all dependencies into a portable conda environment tarball
                
@@ -56,7 +56,6 @@ Installed via `conda`:
                                             working directory.
                   --no-dev                  Do not install dev dependencies for Poetry.
                   --unlock                  Overwrite Poetry lockfile and update dependencies.
-                  --no-pip-cache            Do not use pip cache.
                   --force                   Overwrite any existing archive at the output path.
                   --quiet, -q               Suppress output for commands.
                   --help, -h                Show this help message then exit.

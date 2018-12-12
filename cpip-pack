@@ -104,8 +104,8 @@ usage()
     # NOTE: if you update this print message, please update README.md
     echo "$help" "usage: $script_name --name PROJECT --file FILE [--file FILE]..."
     echo "$s___" "       $s__________ [--poetry DIR] [--version VERSION] [--output DIR]"
-    echo "$s___" "       $s__________ [--no-dev] [--unlock] [--no-pip-cache] [--force]"
-    echo "$s___" "       $s__________ [--quiet] [--help]"
+    echo "$s___" "       $s__________ [--no-dev] [--unlock] [--force] [--quiet]"
+    echo "$s___" "       $s__________ [--help]"
 }
 
 advanced_usage()
@@ -131,7 +131,6 @@ advanced_usage()
     echo "$s___" "                            working directory."
     echo "$s___" "  --no-dev                  Do not install dev dependencies for Poetry."
     echo "$s___" "  --unlock                  Overwrite Poetry lockfile and update dependencies."
-    echo "$s___" "  --no-pip-cache            Do not use pip cache."
     echo "$s___" "  --force                   Overwrite any existing archive at the output path."
     echo "$s___" "  --quiet, -q               Suppress output for commands."
     echo "$s___" "  --help, -h                Show this help message then exit."
@@ -201,15 +200,6 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             unlock=true
-            shift # past argument
-            ;;
-        --no-pip-cache)
-            if [[ $no_pip_cache ]]; then
-                echo "$error" "'--no-pip-cache' option cannot be used more than once"
-                usage
-                exit 1
-            fi
-            no_pip_cache=true
             shift # past argument
             ;;
         --force)
@@ -299,12 +289,8 @@ set -e
 conda_initiate
 
 # set pip cache directory
-if [[ $no_pip_cache ]]; then
-    export PIP_NO_CACHE_DIR=true
-else
-    set_pip_cache_dir
-    echo "$info" "using pip cache directory '$PIP_CACHE_DIR'"
-fi
+set_pip_cache_dir
+echo "$info" "using pip cache directory '$PIP_CACHE_DIR'"
 
 remove_old_env
 
