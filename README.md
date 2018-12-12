@@ -32,8 +32,8 @@ given `conda` environment files
 #### 3) Run 'cpip pack'
                 usage: cpip pack --name PROJECT --file FILE [--file FILE]...
                                  [--poetry DIR] [--version VERSION] [--output DIR]
-                                 [--no-dev] [--no-pip-cache] [--force] [--quiet]
-                                 [--help]
+                                 [--no-dev] [--unlock] [--no-pip-cache] [--force]
+                                 [--quiet] [--help]
                
                 Package all dependencies into a portable conda environment tarball
                
@@ -52,6 +52,7 @@ given `conda` environment files
                                             Otherwise, tarball will be ouputed to the current
                                             working directory.
                   --no-dev                  Do not install dev dependencies for Poetry.
+                  --unlock                  Bypass Poetry lockfile and create a new one.
                   --no-pip-cache            Do not use cpip's pip cache directory. This
                                             emulates using 'cpip clean' to clear the pip cache
                                             without actually doing so.
@@ -68,7 +69,10 @@ given `conda` environment files
                 Normal Use:
                   *  activate             --> source <archive-root>/bin/activate
                   *  deactivate           --> source deactivate
-                  *  view dependencies    --> cat <archive-root>/dependencies/<archive-name>.yml
+
+                Info:
+                  *  conda dependencies     @ <archive-root>/dependencies/<archive-name>.yml
+                  *  poetry lockfile        @ <archive-root>/dependencies/poetry.lock
 
 ## Cleaning Caches
 
@@ -108,12 +112,11 @@ the command line. Different command line orders may produce
 slightly different environments.
 
 #### Concurrency
-Multiple `cpip` processes can be run concurrently if we
-create a build environment for each process, i.e. for process `X`
-we would do the following prior to running:
-
-1. `conda env create -n cpip-X -f cpip.yml`
-1. `conda env activate cpip-X`
+Multiple `cpip` processes can be run concurrently if we do the following:
+- if not using a `poetry` lockfile, use seperate `poetry` project directories
+- create a build environment for each process, i.e. for process `X`
+  1. `conda env create -n cpip-X -f cpip.yml`
+  1. `conda env activate cpip-X`
 
 ##### TODO: Non-Unix Systems
 For systems that don't respect the `XDG_CACHE_HOME` environment variable,

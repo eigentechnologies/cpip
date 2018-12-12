@@ -39,6 +39,19 @@ restore_poetry_config()
     fi
 }
 
+save_poetry_lockfile()
+{
+    cp "$poetry_dir/$poetry_lock" "$dep_dir"
+    poetry_lockfile_saved=true
+}
+
+restore_poetry_lockfile()
+{
+    if [[ $poetry_lockfile_saved ]]; then
+        cp "$dep_dir/$poetry_lock" "$poetry_dir"
+    fi
+}
+
 pip_cache_cleanup()
 {
     if [[ $no_pip_cache ]]; then
@@ -50,6 +63,7 @@ exit_trap()
 {
     exit_message
     pip_cache_cleanup
+    restore_poetry_lockfile
     restore_poetry_config
 }
 
@@ -58,8 +72,8 @@ usage()
     # NOTE: if you update this print message, please update README.md
     echo "$help" "usage: $script_name --name PROJECT --file FILE [--file FILE]..."
     echo "$s___" "       $s__________ [--poetry DIR] [--version VERSION] [--output DIR]"
-    echo "$s___" "       $s__________ [--no-dev] [--no-pip-cache] [--force] [--quiet]"
-    echo "$s___" "       $s__________ [--help]"
+    echo "$s___" "       $s__________ [--no-dev] [--unlock] [--no-pip-cache] [--force]"
+    echo "$s___" "       $s__________ [--quiet] [--help]"
 }
 
 advanced_usage()
@@ -84,6 +98,7 @@ advanced_usage()
     echo "$s___" "                            Otherwise, tarball will be ouputed to the current"
     echo "$s___" "                            working directory."
     echo "$s___" "  --no-dev                  Do not install dev dependencies for Poetry."
+    echo "$s___" "  --unlock                  Bypass Poetry lockfile and create a new one."
     echo "$s___" "  --no-pip-cache            Do not use cpip's pip cache directory. This"
     echo "$s___" "                            emulates using 'cpip clean' to clear the pip cache"
     echo "$s___" "                            without actually doing so."
@@ -147,6 +162,15 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             no_dev="$1"
+            shift # past argument
+            ;;
+        --unlock)
+            if [[ $unlock ]]; then
+                echo "$error" "'--unlock' option cannot be used more than once"
+                usage
+                exit 1
+            fi
+            unlock=true
             shift # past argument
             ;;
         --no-pip-cache)
@@ -307,6 +331,18 @@ for file in ${files[@]}; do
     ((++revision))  # <-- increment conda revision
 done
 
+# setup dependencies info output
+dep_name="dependencies"
+dep_dir="$CONDA_PREFIX/$dep_name"
+dep_file="$output_name.yml"
+poetry_lock="poetry.lock"
+mkdir -p "$dep_dir"
+
+# export environment to .yml file
+echo "$info" "exporting pinned dependencies to '$dep_file'..."
+conda config --env --remove channels defaults  # <-- remove 'defaults' for clean export
+conda env export | grep -v "^prefix: " > "$dep_dir/$dep_file"
+
 # install pip packages in target environment
 if [[ $poetry_dir ]]; then
     poetry_install="${bold}[${green}poetry-install${reset}${bold}]${reset}"
@@ -316,8 +352,10 @@ if [[ $poetry_dir ]]; then
     tag="$default_tag $poetry_install"
     set_logging
    
+    poetry_dir="$(readlink -e "$poetry_dir")"  # <-- set to absolute path
     install_cross_compilers
     set_poetry_config
+    save_poetry_lockfile
 
     # TODO: remove this when Poetry is more capable (see README)
     # set Poetry environment to yield independent cache
@@ -326,7 +364,9 @@ if [[ $poetry_dir ]]; then
     # install pip packages
     echo "$info" "installing pip packages via Poetry..."
     cd "$poetry_dir"
+    [[ $unlock ]] && rm "$poetry_lock"
     poetry install $no_dev $quiet
+    save_poetry_lockfile
     cd -
 
     restore_poetry_config
@@ -347,13 +387,6 @@ if [[ $poetry_dir ]]; then
     set_logging
 fi
 
-# export environment to .yml file
-dep_name="dependencies"
-dep_dir="$CONDA_PREFIX/$dep_name"
-echo "$info" "exporting pinned dependencies to '$output_name.yml'..."
-mkdir -p "$dep_dir"
-conda env export | grep -v "^prefix: " > "$dep_dir/$output_name.yml"
-
 # run conda-pack to package the environment
 echo "$info" "packaging environment via conda-pack..."
 conda pack -o "$output" --arcroot "$output_name" $force $quiet
@@ -361,7 +394,6 @@ conda pack -o "$output" --arcroot "$output_name" $force $quiet
 # EXIT target environment and perform cleanup
 conda deactivate
 pip_cache_cleanup
-
 
 output="$(readlink -e "$output")"  # <-- set to absolute path
 
@@ -377,4 +409,7 @@ echo "$s___"
 echo "$s___" "  Normal Use:"
 echo "$s___" "    *  activate             --> source $output_name/bin/activate"
 echo "$s___" "    *  deactivate           --> source deactivate"
-echo "$s___" "    *  view dependencies    --> cat $output_name/$dep_name/$output_name.yml"
+echo "$s___"
+echo "$s___" "  Info:"
+echo "$s___" "    *  conda dependencies     @ $output_name/$dep_name/$dep_file"
+echo "$s___" "    *  poetry lockfile        @ $output_name/$dep_name/$poetry_lock"
