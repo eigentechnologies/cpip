@@ -130,7 +130,7 @@ advanced_usage()
     echo "$s___" "                            Otherwise, tarball will be ouputed to the current"
     echo "$s___" "                            working directory."
     echo "$s___" "  --no-dev                  Do not install dev dependencies for Poetry."
-    echo "$s___" "  --unlock                  Bypass Poetry lockfile and create a new one."
+    echo "$s___" "  --unlock                  Overwrite Poetry lockfile and update dependencies."
     echo "$s___" "  --no-pip-cache            Do not use pip cache."
     echo "$s___" "  --force                   Overwrite any existing archive at the output path."
     echo "$s___" "  --quiet, -q               Suppress output for commands."

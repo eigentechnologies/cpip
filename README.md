@@ -55,7 +55,7 @@ Installed via `conda`:
                                             Otherwise, tarball will be ouputed to the current
                                             working directory.
                   --no-dev                  Do not install dev dependencies for Poetry.
-                  --unlock                  Bypass Poetry lockfile and create a new one.
+                  --unlock                  Overwrite Poetry lockfile and update dependencies.
                   --no-pip-cache            Do not use pip cache.
                   --force                   Overwrite any existing archive at the output path.
                   --quiet, -q               Suppress output for commands.
@@ -102,7 +102,7 @@ to a `poetry` project `.toml` file.
 #### Cross-Compiler Libraries
 
 Cross-compilers will be installed for if any `pip` dependencies are
-detected. This will consequently install associated libraries, which
+detected. This will consequently install associated libraries which
 will be included in the final environment.
 
 #### Order of Environments
