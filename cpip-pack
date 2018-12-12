@@ -19,9 +19,24 @@ install_cross_compilers()
 {
     if [[ -z $compilers_installed ]]; then
         echo "$info" "installing cross-compilers for pip packages..."
-        conda install -c anaconda "$cc_pkg" "$cxx_pkg" "$gfortran_pkg" --yes $quiet
+        
+        # install packages and filter out only packages than were added, NOT updated/downgraded
+        local pkgs="$cc_pkg $cxx_pkg $gfortran_pkg"
+        local pkg_diff="$(conda install --override-channels -c anaconda "$pkgs" --json --yes $quiet)"
+        local installed="$(echo $pkg_diff | jq '.actions.LINK' | jq '.[].name' | jq -s '.')"
+        local uninstalled="$(echo $pkg_diff | jq '.actions.UNLINK' | jq '.[].name' | jq -s '.')"
+        tmp_pkgs="$(echo "{\"add\": $installed, \"sub\": $uninstalled}" | jq '.add-.sub' | jq '.[]')"
+        
         unset_compiler_env  # <-- unset variables that override distutils build configuration
         compilers_installed=true
+    fi
+}
+
+uninstall_cross_compilers()
+{
+    if [[ $compilers_installed ]]; then
+        echo "$info" "uninstalling cross-compilers..."
+        conda uninstall "$tmp_pkgs" --yes $quiet
     fi
 }
 
@@ -41,28 +56,22 @@ restore_poetry_config()
 
 save_poetry_lockfile()
 {
-    cp "$poetry_dir/$poetry_lock" "$dep_dir"
-    poetry_lockfile_saved=true
+    if [[ -f "$poetry_dir/$poetry_lock" ]]; then
+        cp "$poetry_dir/$poetry_lock" "$dep_dir"
+        p_lockfile_saved=true
+    fi
 }
 
 restore_poetry_lockfile()
 {
-    if [[ $poetry_lockfile_saved ]]; then
+    if [[ $p_lockfile_saved ]]; then
         cp "$dep_dir/$poetry_lock" "$poetry_dir"
-    fi
-}
-
-pip_cache_cleanup()
-{
-    if [[ $no_pip_cache ]]; then
-        rm -rf "$tmp_dir"
     fi
 }
 
 exit_trap()
 {
     exit_message
-    pip_cache_cleanup
     restore_poetry_lockfile
     restore_poetry_config
 }
@@ -99,9 +108,7 @@ advanced_usage()
     echo "$s___" "                            working directory."
     echo "$s___" "  --no-dev                  Do not install dev dependencies for Poetry."
     echo "$s___" "  --unlock                  Bypass Poetry lockfile and create a new one."
-    echo "$s___" "  --no-pip-cache            Do not use cpip's pip cache directory. This"
-    echo "$s___" "                            emulates using 'cpip clean' to clear the pip cache"
-    echo "$s___" "                            without actually doing so."
+    echo "$s___" "  --no-pip-cache            Do not use pip cache."
     echo "$s___" "  --force                   Overwrite any existing archive at the output path."
     echo "$s___" "  --quiet, -q               Suppress output for commands."
     echo "$s___" "  --help, -h                Show this help message then exit."
@@ -268,10 +275,12 @@ set -e
 
 conda_initiate
 
+# remove 'defaults' for to enforce consistency
+conda config --env --remove channels defaults
+
 # set pip cache directory
 if [[ $no_pip_cache ]]; then
-    tmp_dir="$(mktemp -d)"
-    export PIP_CACHE_DIR="$tmp_dir/pip"
+    export PIP_NO_CACHE_DIR=true
 else
     set_pip_cache_dir
     echo "$info" "using pip cache directory '$PIP_CACHE_DIR'"
@@ -279,56 +288,29 @@ fi
 
 remove_old_env
 
-pip_files=()
+pip_count=0
 
 # scan for pip dependencies
 for file in ${files[@]}; do
     # warn user for pip dependencies
     if [[ $(cat "$file" | egrep "^\s*-\s+pip:\s*$" | wc -l) -gt 0 ]]; then
         echo "$warning" "found pip dependencies in '$file'; this is not recommended!"
-        pip_files+=("$file")
+        ((++pip_count))
     fi
 done
-
-# run dummy installation to cache cross-compiled pip .whl files
-if [[ ${#pip_files[@]} -gt 0 ]]; then
-    pip_install="${bold}[${yellow}pip-install${reset}${bold}]${reset}"
-    echo "$warning" "pip dependencies detected in conda files: running $pip_install..."
-
-    # change logging for pip_install
-    tag="$default_tag $pip_install"
-    set_logging
-
-    # create and ENTER target environment
-    conda_env_create
-    conda activate "$env"
-    
-    install_cross_compilers
-    
-    # update environment to install the pip dependencies 
-    for file in ${pip_files[@]}; do
-        conda_env_update
-    done
-
-    # finished; EXIT target environment and cleanup
-    conda deactivate
-    conda_env_remove
-    echo "$info" "Complete!"
-    
-    # revert logging back to default settings
-    tag="$default_tag"
-    set_logging
-fi
 
 # create and ENTER target environment
 conda_env_create
 conda activate "$env"
-revision=0  # <-- track latest conda revision
+
+# install cross compilers to compile pip packages
+if [[ $pip_count -gt 0 ]]; then
+    install_cross_compilers
+fi
 
 # update the environment 
 for file in ${files[@]}; do
     conda_env_update
-    ((++revision))  # <-- increment conda revision
 done
 
 # setup dependencies info output
@@ -340,7 +322,6 @@ mkdir -p "$dep_dir"
 
 # export environment to .yml file
 echo "$info" "exporting pinned dependencies to '$dep_file'..."
-conda config --env --remove channels defaults  # <-- remove 'defaults' for clean export
 conda env export | grep -v "^prefix: " > "$dep_dir/$dep_file"
 
 # install pip packages in target environment
@@ -364,7 +345,7 @@ if [[ $poetry_dir ]]; then
     # install pip packages
     echo "$info" "installing pip packages via Poetry..."
     cd "$poetry_dir"
-    [[ $unlock ]] && rm "$poetry_lock"
+    [[ $unlock ]] && rm -f "$poetry_lock"
     poetry install $no_dev $quiet
     save_poetry_lockfile
     cd -
@@ -375,10 +356,6 @@ if [[ $poetry_dir ]]; then
     # remove cache and revert environment
     rm -rf "$XDG_CACHE_HOME"
     unset XDG_CACHE_HOME
-
-    # uninstall cross-compilers by reverting conda revision
-    echo "$info" "uninstalling cross-compilers..."
-    conda install --revision "$revision" --yes $quiet
 
     echo "$info" "Complete!"
 
@@ -391,9 +368,9 @@ fi
 echo "$info" "packaging environment via conda-pack..."
 conda pack -o "$output" --arcroot "$output_name" $force $quiet
 
-# EXIT target environment and perform cleanup
+# remove cross-compilers and EXIT target environment
+uninstall_cross_compilers
 conda deactivate
-pip_cache_cleanup
 
 output="$(readlink -e "$output")"  # <-- set to absolute path
 

@@ -5,3 +5,5 @@ channels:
 dependencies:
 - conda>=4.4
 - conda-pack
+- jq
+- poetry # optional

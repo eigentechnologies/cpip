@@ -17,9 +17,12 @@ given `conda` environment files
 
 ## Dependencies
 
-- [conda](https://conda.io/docs/)
-- [conda-pack](https://conda.github.io/conda-pack/) (downloaded via conda)
-- [poetry](https://poetry.eustace.io/docs/) (optional)
+[conda](https://conda.io/docs/)
+
+Installed via `conda`:
+  - [conda-pack](https://conda.github.io/conda-pack/)
+  - [jq](https://stedolan.github.io/jq/)
+  - [poetry](https://poetry.eustace.io/docs/) (optional)
 
 ## Usage
 
@@ -53,9 +56,7 @@ given `conda` environment files
                                             working directory.
                   --no-dev                  Do not install dev dependencies for Poetry.
                   --unlock                  Bypass Poetry lockfile and create a new one.
-                  --no-pip-cache            Do not use cpip's pip cache directory. This
-                                            emulates using 'cpip clean' to clear the pip cache
-                                            without actually doing so.
+                  --no-pip-cache            Do not use pip cache.
                   --force                   Overwrite any existing archive at the output path.
                   --quiet, -q               Suppress output for commands.
                   --help, -h                Show this help message then exit.
@@ -81,8 +82,10 @@ Use `cpip clean` command to clean the conda and/or pip caches
 ## Other Things to Note
 
 #### Conda Configuration
-`cpip` is tested to work with default `conda` configuration
-settings. Changing some settings may yield unexpected results.
+
+The only change made to the configuration is that `defaults`
+is removed from the `channels` key in order to enforce better
+consistency. Changing other settings may yield unexpected results.
 
 #### Poetry Configuration
 `cpip pack` internally sets `settings.virtualenvs.create` to `false`,
@@ -95,15 +98,6 @@ packages in your project; this allows for lockfiles to pin package
 versions properly. If you decide to use `poetry`, it makes sense to
 move ALL `pip` dependencies from the `conda` environment `.yml` files
 to a `poetry` project `.toml` file.
-
-If there are `pip` dependencies in the `conda` environment file,
-a mode called `pip_install` will be executed, which forces a dummy
-install of all the environment files with `pip` dependencies. Using
-`poetry` exclusively for `pip` dependencies will trim the extra
-execution time caused by `pip_install`. Another way to slim down
-the execution time is to separate the `pip` dependencies and the
-`conda` dependencies into seperate files as much as possible, since
-only files with `pip` dependencies are included in `pip_install` mode.
 
 #### Order of Environments
 This tool can take more than one `conda` environment file.
