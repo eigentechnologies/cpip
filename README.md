@@ -99,6 +99,12 @@ versions properly. If you decide to use `poetry`, it makes sense to
 move ALL `pip` dependencies from the `conda` environment `.yml` files
 to a `poetry` project `.toml` file.
 
+#### Cross-Compiler Libraries
+
+Cross-compilers will be installed for if any `pip` dependencies are
+detected. This will consequently install associated libraries, which
+will be included in the final environment.
+
 #### Order of Environments
 This tool can take more than one `conda` environment file.
 These files will be loaded in the order they are given on

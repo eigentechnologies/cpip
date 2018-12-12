@@ -20,23 +20,46 @@ install_cross_compilers()
     if [[ -z $compilers_installed ]]; then
         echo "$info" "installing cross-compilers for pip packages..."
         
-        # install packages and filter out only packages than were added, NOT updated/downgraded
-        local pkgs="$cc_pkg $cxx_pkg $gfortran_pkg"
-        local pkg_diff="$(conda install --override-channels -c anaconda "$pkgs" --json --yes $quiet)"
-        local installed="$(echo $pkg_diff | jq '.actions.LINK' | jq '.[].name' | jq -s '.')"
-        local uninstalled="$(echo $pkg_diff | jq '.actions.UNLINK' | jq '.[].name' | jq -s '.')"
-        tmp_pkgs="$(echo "{\"add\": $installed, \"sub\": $uninstalled}" | jq '.add-.sub' | jq '.[]')"
-        
-        unset_compiler_env  # <-- unset variables that override distutils build configuration
+        # install cross compilers and filter out only packages than were added, NOT updated/downgraded
+        local pkgs=("$cc_pkg" "$cxx_pkg" "$gfortran_pkg")
+        local pkg_diff="$(conda install --override-channels -c anaconda ${pkgs[@]} --no-update-deps --json --yes)"
+        local install_error="$(echo "$pkg_diff" | jq -r '.error')"
+        if [[ $install_error != "null" ]]; then
+            echo -e "$error" "$install_error"
+            exit 1
+        fi
+
+        # filter out only packages than were added, NOT updated/downgraded
+        local actions="$(echo "$pkg_diff" | jq '.actions')"
+        [[ $actions != "null" ]] &&
+            local link="$(echo "$actions" | jq '.LINK')"
+        [[ $actions != "null" ]] &&
+            local unlink="$(echo "$actions" | jq '.UNLINK')"
+        [[ $link ]] && [[ $link != "null" ]] &&
+            local add="$(echo "$link" | jq '.[].name' | jq -s '.')"
+        [[ $unlink ]] && [[ $unlink != "null" ]] &&
+            local sub="$(echo "$unlink" | jq '.[].name' | jq -s '.')"
+        [[ $add ]] &&
+            tmp_pkgs="$add"
+        [[ $add ]] && [[ $sub ]] &&
+            tmp_pkgs="$(echo "{\"add\": $add, \"sub\": $sub}" | jq '.add-.sub')"
+        [[ $tmp_pkgs ]] &&
+            tmp_pkgs="$(echo $tmp_pkgs | jq -r '.[]' | grep -v "^lib")"
+
+        # unset variables that override distutils build configuration
+        unset_compiler_env
+
+        # set flag to prevent repeated installs or unneeded uninstall
         compilers_installed=true
     fi
 }
 
 uninstall_cross_compilers()
 {
-    if [[ $compilers_installed ]]; then
+    if [[ $compilers_installed ]] && [[ $tmp_pkgs ]]; then
         echo "$info" "uninstalling cross-compilers..."
-        conda uninstall "$tmp_pkgs" --yes $quiet
+        conda uninstall ${tmp_pkgs[@]} --yes $quiet
+        unset compilers_installed
     fi
 }
 
@@ -275,9 +298,6 @@ set -e
 
 conda_initiate
 
-# remove 'defaults' for to enforce consistency
-conda config --env --remove channels defaults
-
 # set pip cache directory
 if [[ $no_pip_cache ]]; then
     export PIP_NO_CACHE_DIR=true
@@ -302,6 +322,9 @@ done
 # create and ENTER target environment
 conda_env_create
 conda activate "$env"
+
+# remove 'defaults' for to enforce consistency
+conda config --env --remove channels defaults
 
 # install cross compilers to compile pip packages
 if [[ $pip_count -gt 0 ]]; then
@@ -364,12 +387,14 @@ if [[ $poetry_dir ]]; then
     set_logging
 fi
 
+# remove cross-compilers
+uninstall_cross_compilers
+
 # run conda-pack to package the environment
 echo "$info" "packaging environment via conda-pack..."
 conda pack -o "$output" --arcroot "$output_name" $force $quiet
 
-# remove cross-compilers and EXIT target environment
-uninstall_cross_compilers
+# EXIT target environment
 conda deactivate
 
 output="$(readlink -e "$output")"  # <-- set to absolute path
