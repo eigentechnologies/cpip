@@ -17,12 +17,10 @@ given `conda` environment files
 
 ## Dependencies
 
-[conda](https://conda.io/docs/)
-
-Installed via `conda`:
-  - [conda-pack](https://conda.github.io/conda-pack/)
-  - [jq](https://stedolan.github.io/jq/)
-  - [poetry](https://poetry.eustace.io/docs/) (optional)
+- [conda](https://conda.io/docs/)
+- [conda-pack](https://conda.github.io/conda-pack/) (installed via `conda`)
+- [jq](https://stedolan.github.io/jq/) (installed via `conda`)
+- [poetry](https://poetry.eustace.io/docs/) (optional)
 
 ## Usage
 
