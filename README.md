@@ -11,16 +11,16 @@ given `conda` environment files
 1. Packages `conda` environment via `conda-pack` tool
 
 ## Supported Operating Systems
-
 - Linux
 - macOS
 
-## Dependencies
-
+## System Requirements
 - [conda](https://conda.io/docs/)
+- [poetry](https://poetry.eustace.io/docs/) (optional)
+
+## Environment Dependencies
 - [conda-pack](https://conda.github.io/conda-pack/) (installed via `conda`)
 - [jq](https://stedolan.github.io/jq/) (installed via `conda`)
-- [poetry](https://poetry.eustace.io/docs/) (optional)
 
 ## Usage
 
@@ -73,13 +73,11 @@ given `conda` environment files
                   *  poetry lockfile        @ <archive-root>/dependencies/poetry.lock
 
 ## Cleaning Caches
-
 Use `cpip clean` command to clean the conda and/or pip caches
 
 ## Other Things to Note
 
 #### Conda Configuration
-
 The only change made to the configuration is that `defaults`
 is removed from the `channels` key in order to enforce better
 consistency. Changing other settings may yield unexpected results.
@@ -96,11 +94,18 @@ versions properly. If you decide to use `poetry`, it makes sense to
 move ALL `pip` dependencies from the `conda` environment `.yml` files
 to a `poetry` project `.toml` file.
 
-#### Cross-Compiler Libraries
-
+#### Cross-Compilers
 Cross-compilers will be installed for if any `pip` dependencies are
-detected. This will consequently install associated libraries which
-will be included in the final environment.
+detected. After installing all the `pip` dependencies, the compilers
+will be removed but the associated libraries will remain for the
+final package.
+
+**NOTE:** If you have any `pip` dependencies AND any cross-compilers
+defined in your environment files, the cross-compilers will be removed
+regardless of the fact you defined them to be there. Defining all `pip`
+dependencies via `poetry` will prevent this from happening. Although,
+its questionable why one would want to ship cross-compilers with a
+portable environment in the first place.
 
 #### Order of Environments
 This tool can take more than one `conda` environment file.

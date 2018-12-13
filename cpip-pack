@@ -1,18 +1,18 @@
 #!/bin/bash
 
-unset_compiler_env()
+set_compiler_env()
 {
-    unset AR
-    unset CPP
-    unset CC
-    unset CXX
-    unset LDSHARED
+    # refresh current environment
+    local current_env="$CONDA_DEFAULT_ENV"
+    conda deactivate
+    conda activate "$current_env"
 
-    unset ARFLAGS
-    unset CPPFLAGS
-    unset CFLAGS
-    unset CXXFLAGS
-    unset LDFLAGS
+    # NOTE: the compiler options here are pulled straight from the Python Makefile
+    if [[ $linux ]]; then
+        export LDSHARED="$CC -shared"
+    elif [[ $macos ]]; then
+        export LDSHARED="$CC -bundle -undefined dynamic_lookup"
+    fi
 }
 
 install_cross_compilers()
@@ -20,7 +20,7 @@ install_cross_compilers()
     if [[ -z $compilers_installed ]]; then
         echo "$info" "installing cross-compilers for pip packages..."
         
-        # install cross compilers and filter out only packages than were added, NOT updated/downgraded
+        # install cross compilers
         local pkgs=("$cc_pkg" "$cxx_pkg" "$gfortran_pkg")
         local pkg_diff="$(conda install --override-channels -c anaconda ${pkgs[@]} --no-update-deps --json --quiet)"
         local install_error="$(echo "$pkg_diff" | jq -r '.error')"
@@ -36,9 +36,9 @@ install_cross_compilers()
         [[ $actions != "null" ]] &&
             local unlink="$(echo "$actions" | jq '.UNLINK')"
         [[ $link ]] && [[ $link != "null" ]] &&
-            local add="$(echo "$link" | jq '.[].name' | jq -s '.')"
+            local add="$(echo "$link" | jq '[.[].name]')"
         [[ $unlink ]] && [[ $unlink != "null" ]] &&
-            local sub="$(echo "$unlink" | jq '.[].name' | jq -s '.')"
+            local sub="$(echo "$unlink" | jq '[.[].name]')"
         [[ $add ]] &&
             tmp_pkgs="$add"
         [[ $add ]] && [[ $sub ]] &&
@@ -46,10 +46,7 @@ install_cross_compilers()
         [[ $tmp_pkgs ]] &&
             tmp_pkgs="$(echo $tmp_pkgs | jq -r '.[]' | grep -v "^lib")"
 
-        # unset variables that override distutils build configuration
-        unset_compiler_env
-
-        # set flag to prevent repeated installs or unneeded uninstall
+        set_compiler_env
         compilers_installed=true
     fi
 }
@@ -330,8 +327,9 @@ poetry_lock="poetry.lock"
 mkdir -p "$dep_dir"
 
 # export environment to .yml file
+uninstall_cross_compilers
 echo "$info" "exporting pinned dependencies to '$dep_file'..."
-conda env export | grep -v "^prefix: " > "$dep_dir/$dep_file"
+conda env export | grep -v "^prefix: " | grep -v "^$" > "$dep_dir/$dep_file"
 
 # install pip packages in target environment
 if [[ $poetry_dir ]]; then
@@ -366,15 +364,13 @@ if [[ $poetry_dir ]]; then
     rm -rf "$XDG_CACHE_HOME"
     unset XDG_CACHE_HOME
 
+    uninstall_cross_compilers
     echo "$info" "Complete!"
 
     # revert logging back to default settings
     tag="$default_tag"
     set_logging
 fi
-
-# remove cross-compilers
-uninstall_cross_compilers
 
 # run conda-pack to package the environment
 echo "$info" "packaging environment via conda-pack..."
