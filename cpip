@@ -9,18 +9,35 @@ set_script_space()
 }
 set_script_space
 
-# set colors
-bold=`tput bold`
-red=`tput setaf 1`
-green=`tput setaf 2`
-yellow=`tput setaf 3`
-blue=`tput setaf 4`
-magenta=`tput setaf 5`
-cyan=`tput setaf 6`
-reset=`tput sgr0`
+set_colors()
+{
+    bold=`tput bold`
+    red=`tput setaf 1`
+    green=`tput setaf 2`
+    yellow=`tput setaf 3`
+    blue=`tput setaf 4`
+    magenta=`tput setaf 5`
+    cyan=`tput setaf 6`
+    reset=`tput sgr0`
+}
+
+min_args=0
+for arg in $@; do
+    if [[ $arg == "--no-color" ]]; then
+        no_color=true
+        ((++min_args))
+    fi
+done
+if [[ $no_color ]]; then
+    export PIP_NO_COLOR=1
+    no_ansi="--no-ansi"
+else
+    ansi="--ansi"
+    set_colors
+fi
 
 # set print commands
-default_tag="${bold}${magenta}[${cyan}$script_name${magenta}]$reset"
+default_tag="${bold}${magenta}[${cyan}$script_name${magenta}]${reset}"
 
 # store empty string equivalent of 'info' and 'help'
 four_space="[$script_name] FOUR:"
@@ -112,33 +129,40 @@ usage()
     echo "$s___" "  clean                     Cleanup conda and/or pip cache."
     echo "$s___"
     echo "$s___" "options:"
+    echo "$s___" "  --no-color                Disable colored output."
     echo "$s___" "  --help, -h                Show this help message then exit."
 }
 
-if [[ $# -eq 0 ]]; then
+if [[ $# -le $min_args ]]; then
     usage
     exit 0
 fi
 
-case $1 in
-    pack)
-        script_name+=" $1"
-        set_script_space
-        shift
-        source "$script_dir/cpip-pack"
-        ;;
-    clean)
-        script_name+=" $1"
-        set_script_space
-        shift
-        source "$script_dir/cpip-clean"
-        ;;
-    -h|--help)
-        usage
-        ;;
-    *)
-        echo "$error" "'$1' not a recognized command"
-        usage
-        exit 1
-        ;;
-esac
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        pack)
+            script_name+=" $1"
+            set_script_space
+            shift # past argument
+            source "$script_dir/cpip-pack"
+            ;;
+        clean)
+            script_name+=" $1"
+            set_script_space
+            shift # past argument
+            source "$script_dir/cpip-clean"
+            ;;
+        --no-color)
+            shift # past argument
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "$error" "'$1' not a recognized command"
+            usage
+            exit 1
+            ;;
+    esac
+done

@@ -101,8 +101,8 @@ usage()
     # NOTE: if you update this print message, please update README.md
     echo "$help" "usage: $script_name --name PROJECT --file FILE [--file FILE]..."
     echo "$s___" "       $s__________ [--poetry DIR] [--version VERSION] [--output DIR]"
-    echo "$s___" "       $s__________ [--no-dev] [--unlock] [--force] [--quiet]"
-    echo "$s___" "       $s__________ [--help]"
+    echo "$s___" "       $s__________ [--no-dev] [--unlock] [--force] [--no-color]"
+    echo "$s___" "       $s__________ [--quiet] [--help]"
 }
 
 advanced_usage()
@@ -129,6 +129,7 @@ advanced_usage()
     echo "$s___" "  --no-dev                  Do not install dev dependencies for Poetry."
     echo "$s___" "  --unlock                  Overwrite Poetry lockfile and update dependencies."
     echo "$s___" "  --force                   Overwrite any existing archive at the output path."
+    echo "$s___" "  --no-color                Disable colored output."
     echo "$s___" "  --quiet, -q               Suppress output for commands."
     echo "$s___" "  --help, -h                Show this help message then exit."
 }
@@ -206,6 +207,9 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             force="$1"
+            shift # past argument
+            ;;
+        --no-color)
             shift # past argument
             ;;
         -q|--quiet)
@@ -353,7 +357,7 @@ if [[ $poetry_dir ]]; then
     echo "$info" "installing pip packages via Poetry..."
     cd "$poetry_dir"
     [[ $unlock ]] && rm -f "$poetry_lock"
-    poetry install $no_dev $quiet
+    poetry install $no_dev $quiet $ansi $no_ansi
     save_poetry_lockfile
     cd -
 

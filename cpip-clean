@@ -18,17 +18,13 @@ usage()
     echo "$s___" "  --pip-cache, -p           Remove cpip's pip cache."
     echo "$s___"
     echo "$s___" "options:"
-    echo "$s___" "  --yes, -y                 Consent to deletion without prompts."
+    echo "$s___" "  --yes                     Consent to deletion without prompts."
+    echo "$s___" "  --no-color                Disable colored output."
     echo "$s___" "  --quiet, -q               Suppress output for commands."
     echo "$s___" "  --help, -h                Show this help message then exit."
 }
 
-if [[ $# -eq 0 ]]; then
-    echo "$error" "at least one argument is required"
-    usage
-    exit 1
-fi
-
+arg_count=0
 while [[ $# -gt 0 ]]; do
     case $1 in
         -s|--slip)
@@ -38,6 +34,7 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             slip="$1"
+            ((++arg_count))
             shift # past argument
             ;;
         -t|--tarballs)
@@ -47,6 +44,7 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             tarballs="$1"
+            ((++arg_count))
             shift # past argument
             ;;
         -p|--pip-cache)
@@ -56,15 +54,19 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             pip_cache="$1"
+            ((++arg_count))
             shift # past argument
             ;;
-        -y|--yes)
+        --yes)
             if [[ $yes ]]; then
                 echo "$error" "'--yes' option cannot be used more than once"
                 usage
                 exit 1
             fi
             yes="$1"
+            shift # past argument
+            ;;
+        --no-color)
             shift # past argument
             ;;
         -q|--quiet)
@@ -88,6 +90,12 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+if [[ $arg_count -eq 0 ]]; then
+    echo "$error" "at least one argument is required"
+    usage
+    exit 1
+fi
 
 # exit as soon as a command fails and print error
 trap exit_trap EXIT
