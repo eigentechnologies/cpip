@@ -5,6 +5,7 @@
 - new option `--post-install` for `pack`;
   allows scripts to execute WITHIN build env
 - organize folders into `bin` and `src`
+- use `jq` inplace of `grep` for `conda` outputs
 ### LOW PRIORITY:
 - check `--no-color` for multiple appearances
 - pickup progress bar from `install_cross_compilers`
