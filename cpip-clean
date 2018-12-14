@@ -28,41 +28,21 @@ arg_count=0
 while [[ $# -gt 0 ]]; do
     case $1 in
         -s|--slip)
-            if [[ $slip ]]; then
-                echo "$error" "'--slip' option cannot be used more than once"
-                usage
-                exit 1
-            fi
             slip="$1"
             ((++arg_count))
             shift # past argument
             ;;
         -t|--tarballs)
-            if [[ $tarballs ]]; then
-                echo "$error" "'--tarballs' option cannot be used more than once"
-                usage
-                exit 1
-            fi
             tarballs="$1"
             ((++arg_count))
             shift # past argument
             ;;
         -p|--pip-cache)
-            if [[ $pip ]]; then
-                echo "$error" "'--pip-cache' option cannot be used more than once"
-                usage
-                exit 1
-            fi
             pip_cache="$1"
             ((++arg_count))
             shift # past argument
             ;;
         --yes)
-            if [[ $yes ]]; then
-                echo "$error" "'--yes' option cannot be used more than once"
-                usage
-                exit 1
-            fi
             yes="$1"
             shift # past argument
             ;;
@@ -70,11 +50,6 @@ while [[ $# -gt 0 ]]; do
             shift # past argument
             ;;
         -q|--quiet)
-            if [[ $quiet ]]; then
-                echo "$error" "'--quiet' option cannot be used more than once"
-                usage
-                exit 1
-            fi
             quiet="$1"
             export PIP_QUIET=1
             shift # past argument

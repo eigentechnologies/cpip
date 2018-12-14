@@ -45,14 +45,14 @@ s___="$(len=${#four_space}; ch=' '; printf '%*s' "$len" | tr ' ' "$ch")"
 
 set_logging()
 {
+    local tag="$1"
     info="$tag ${green}INFO:${reset}"
     warning="$tag ${yellow}WARNING:${reset}"
     error="$tag ${red}ERROR:${reset}"
     help="$tag ${blue}HELP:${reset}"
 }
 
-tag="$default_tag"
-set_logging
+set_logging "$default_tag"
 
 # check os to find the right cross compilers
 if [[ $OSTYPE == "linux-gnu" ]]; then

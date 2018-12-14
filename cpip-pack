@@ -134,15 +134,18 @@ advanced_usage()
     echo "$s___" "  --help, -h                Show this help message then exit."
 }
 
+opt_twice_err()
+{
+    echo "$error" "'$1' option cannot be used more than once"
+    usage
+    exit 1
+}
+
 files=()
 while [[ $# -gt 0 ]]; do
     case $1 in
         -n|--name)
-            if [[ $name ]]; then
-                echo "$error" "'--name' option cannot be used more than once"
-                usage
-                exit 1
-            fi
+            [[ $name ]] && opt_twice_err "--name"
             name="$2"
             shift # past argument
             shift # past value
@@ -153,59 +156,32 @@ while [[ $# -gt 0 ]]; do
             shift # past value
             ;;
         -p|--poetry)
-            if [[ $poetry_dir ]]; then
-                echo "$error" "'--poetry' option cannot be used more than once"
-                usage
-                exit 1
-            fi
+            [[ $poetry_dir ]] && opt_twice_err "--poetry"
             poetry_dir="$2"
             shift # past argument
             shift # past value
             ;;
         -v|--version)
-            if [[ $version ]]; then
-                echo "$error" "'--version' option cannot be used more than once"
-                usage
-                exit 1
-            fi
+            [[ $version ]] && opt_twice_err "--version"
             version="$2"
             shift # past argument
             shift # past value
             ;;
         -o|--output)
-            if [[ $output_dir ]]; then
-                echo "$error" "'--output' option cannot be used more than once"
-                usage
-                exit 1
-            fi
+            [[ $output_dir ]] && opt_twice_err "--output"
             output_dir="$2"
             shift # past argument
             shift # past value
             ;;
         --no-dev)
-            if [[ $no_dev ]]; then
-                echo "$error" "'--no-dev' option cannot be used more than once"
-                usage
-                exit 1
-            fi
             no_dev="$1"
             shift # past argument
             ;;
         --unlock)
-            if [[ $unlock ]]; then
-                echo "$error" "'--unlock' option cannot be used more than once"
-                usage
-                exit 1
-            fi
             unlock=true
             shift # past argument
             ;;
         --force)
-            if [[ $force ]]; then
-                echo "$error" "'--force' option cannot be used more than once"
-                usage
-                exit 1
-            fi
             force="$1"
             shift # past argument
             ;;
@@ -213,11 +189,6 @@ while [[ $# -gt 0 ]]; do
             shift # past argument
             ;;
         -q|--quiet)
-            if [[ $quiet ]]; then
-                echo "$error" "'--quiet' option cannot be used more than once"
-                usage
-                exit 1
-            fi
             quiet="$1"
             export PIP_QUIET=1
             shift # past argument
@@ -341,8 +312,7 @@ if [[ $poetry_dir ]]; then
     echo "$info" "Poetry project specified in '$poetry_dir': running $poetry_install..."
 
     # change logging for poetry_install
-    tag="$default_tag $poetry_install"
-    set_logging
+    set_logging "$default_tag $poetry_install"
    
     poetry_dir="$(readlink -e "$poetry_dir")"  # <-- set to absolute path
     install_cross_compilers
@@ -372,8 +342,7 @@ if [[ $poetry_dir ]]; then
     echo "$info" "Complete!"
 
     # revert logging back to default settings
-    tag="$default_tag"
-    set_logging
+    set_logging "$default_tag"
 fi
 
 # run conda-pack to package the environment
