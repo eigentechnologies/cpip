@@ -3,9 +3,14 @@
 # store script name and empty string equivalent
 script_name="$(basename -- "$0")"
 script_dir="$(dirname -- "$0")"
+set_space()
+{
+    space="$(len=${#1}; ch=' '; printf '%*s' "$len" | tr ' ' "$ch")"
+}
 set_script_space()
 {
-    s__________="$(len=${#script_name}; ch=' '; printf '%*s' "$len" | tr ' ' "$ch")"
+    set_space "$script_name"
+    ___________="$space"
 }
 set_script_space
 
@@ -41,7 +46,8 @@ default_tag="${bold}${magenta}[${cyan}$script_name${magenta}]${reset}"
 
 # store empty string equivalent of 'info' and 'help'
 four_space="[$script_name] FOUR:"
-s___="$(len=${#four_space}; ch=' '; printf '%*s' "$len" | tr ' ' "$ch")"
+set_space "$four_space"
+____="$space"
 
 set_logging()
 {
