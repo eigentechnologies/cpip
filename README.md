@@ -53,7 +53,7 @@ given `conda` environment files
                                             Otherwise, tarball will be ouputed to the current
                                             working directory.
                   --no-dev                  Do not install dev dependencies for Poetry.
-                  --unlock                  Overwrite Poetry lockfile and update dependencies.
+                  --unlock                  Update Poetry dependencies and overwrite lockfile.
                   --force                   Overwrite any existing archive at the output path.
                   --quiet, -q               Suppress output for commands.
                   --help, -h                Show this help message then exit.

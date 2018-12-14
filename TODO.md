@@ -1,7 +1,7 @@
 ### HIGH PRIORTY:
-- switch `--unlock` option to use `poetry update`
 - make new command `create` which unpacks and
   fixes prefixes
+- multithread `conda-pack` tarring
 - new option `--post-install`;
   allows scripts to execute WITHIN build env
 - organize folders into `bin` and `src`

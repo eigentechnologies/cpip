@@ -74,25 +74,9 @@ restore_poetry_config()
     fi
 }
 
-save_poetry_lockfile()
-{
-    if [[ -f "$poetry_dir/$poetry_lock" ]]; then
-        cp "$poetry_dir/$poetry_lock" "$dep_dir"
-        p_lockfile_saved=true
-    fi
-}
-
-restore_poetry_lockfile()
-{
-    if [[ $p_lockfile_saved ]]; then
-        cp "$dep_dir/$poetry_lock" "$poetry_dir"
-    fi
-}
-
 exit_trap()
 {
     exit_message
-    restore_poetry_lockfile
     restore_poetry_config
 }
 
@@ -127,7 +111,7 @@ advanced_usage()
     echo "$s___" "                            Otherwise, tarball will be ouputed to the current"
     echo "$s___" "                            working directory."
     echo "$s___" "  --no-dev                  Do not install dev dependencies for Poetry."
-    echo "$s___" "  --unlock                  Overwrite Poetry lockfile and update dependencies."
+    echo "$s___" "  --unlock                  Update Poetry dependencies and overwrite lockfile."
     echo "$s___" "  --force                   Overwrite any existing archive at the output path."
     echo "$s___" "  --no-color                Disable colored output."
     echo "$s___" "  --quiet, -q               Suppress output for commands."
@@ -317,7 +301,6 @@ if [[ $poetry_dir ]]; then
     poetry_dir="$(readlink -e "$poetry_dir")"  # <-- set to absolute path
     install_cross_compilers
     set_poetry_config
-    save_poetry_lockfile
 
     # TODO: remove this when Poetry is more capable (see README)
     # set Poetry environment to yield independent cache
@@ -326,9 +309,11 @@ if [[ $poetry_dir ]]; then
     # install pip packages
     echo "$info" "installing pip packages via Poetry..."
     cd "$poetry_dir"
-    [[ $unlock ]] && rm -f "$poetry_lock"
-    poetry install $no_dev $quiet $ansi $no_ansi
-    save_poetry_lockfile
+    if [[ $unlock ]]; then
+        poetry update $no_dev $quiet $ansi $no_ansi
+    else
+        poetry install $no_dev $quiet $ansi $no_ansi
+    fi
     cd -
 
     restore_poetry_config
