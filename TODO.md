@@ -8,3 +8,4 @@
 ### LOW PRIORITY:
 - check `--no-color` for multiple appearances
 - pickup progress bar from `install_cross_compilers`
+- add `Python` and `pip` if not in `conda` environment
