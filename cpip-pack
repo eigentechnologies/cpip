@@ -60,6 +60,14 @@ uninstall_cross_compilers()
     fi
 }
 
+install_pip()
+{
+    if [[ $(conda list --json | jq -r '.[].name' | grep "^pip$" | wc -l) -eq 0 ]]; then
+        echo "$info" "pip is missing from conda environment, installing..."
+        conda install --override-channels -c anaconda pip --no-update-deps --yes $quiet $log_quiet
+    fi
+}
+
 set_poetry_config()
 {
     venvs_create="$(poetry config settings.virtualenvs.create)"  # <-- save previous value
@@ -149,7 +157,7 @@ complete_msg()
 usage()
 {
     # NOTE: if you update this print message, please update README.md
-    echo "$help" "usage: $script_name --name PROJECT --file FILE [--file FILE]..."
+    echo "$help" "usage: $script_name --name PROJECT [--file FILE]..."
     echo "$____" "       $___________ [--poetry DIR] [--version VERSION] [--output DIR]"
     echo "$____" "       $___________ [--post-setup SCRIPT] [--no-dev] [--unlock]"
     echo "$____" "       $___________ [--force] [--color] [--no-color] [--quiet]"
@@ -174,12 +182,12 @@ advanced_usage()
     echo "$____" "required arguments:"
     echo "$____" "  --name, -n PROJECT        Name of the project. Will be used for the name in"
     echo "$____" "                            the output $output."
+    echo "$____"
+    echo "$____" "optional arguments:"
     echo "$____" "  --file, -f FILE           Conda environment file. This option can be used"
     echo "$____" "                            multiple times to specify multiple files. The"
     echo "$____" "                            environment will be updated in the order that they"
     echo "$____" "                            are given on the command line."
-    echo "$____"
-    echo "$____" "optional arguments:"
     echo "$____" "  --poetry, -p DIR          Poetry project directory."
     echo "$____" "  --version, -v VERSION     Version number to be included in output $output."
     echo "$____" "  --output, -o DIR          Directory where the final $output will go."
@@ -278,11 +286,6 @@ done
 # check for required options
 if [[ -z $name ]]; then
     >&2 echo "$error" "'--name' option is required"
-    >&2 usage
-    exit 1
-fi
-if [[ ${#files[@]} -eq 0 ]]; then
-    >&2 echo "$error" "'--file' option is required (atleast once)"
     >&2 usage
     exit 1
 fi
@@ -404,6 +407,7 @@ if [[ $poetry_dir ]]; then
     set_logging "$default_tag $poetry_install"
    
     poetry_dir="$(readlink -e "$poetry_dir")"  # <-- set to absolute path
+    install_pip
     install_cross_compilers
     set_poetry_config
 
