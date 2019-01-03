@@ -3,6 +3,7 @@
 # store script name and empty string equivalent
 script_name="$(basename -- "$0")"
 script_dir="$(dirname -- "$0")"
+src_dir="$script_dir/../src"
 set_space()
 {
     space="$(len=${#1}; ch=' '; printf '%*s' "$len" | tr ' ' "$ch")"
@@ -169,20 +170,20 @@ while [[ $# -gt 0 ]]; do
             script_name+=" $1"
             set_script_space
             shift # past argument
-            source "$script_dir/cpip-pack"
+            source "$src_dir/cpip-pack"
             ;;
         create)
             script_name+=" $1"
             set_script_space
             shift # past argument
             create=true
-            source "$script_dir/cpip-pack"
+            source "$src_dir/cpip-pack"
             ;;
         clean)
             script_name+=" $1"
             set_script_space
             shift # past argument
-            source "$script_dir/cpip-clean"
+            source "$src_dir/cpip-clean"
             ;;
         --color)
             shift # past argument

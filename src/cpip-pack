@@ -104,7 +104,7 @@ run_post_setup()
         echo "$info" "running post-setup script..."
         local current_env="$CONDA_DEFAULT_ENV"
         conda deactivate
-        bash "$script_dir/launch" "$env" "$post_setup"
+        bash "$src_dir/launch" "$env" "$post_setup"
         conda activate "$current_env"
         post_setup_ran=true
     fi
