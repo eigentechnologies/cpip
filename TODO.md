@@ -1,8 +1,5 @@
 ### HIGH PRIORTY:
-- new option `--post-install`;
-  allows scripts to execute WITHIN build env
 - organize folders into `bin` and `src`
-- use `jq` inplace of `grep` for `conda` outputs
 - improve logging output
   - pass i.e. `--log-quiet` option only to `conda` and `pip` (not `poetry`)
   - pipe stdout and stderr different places

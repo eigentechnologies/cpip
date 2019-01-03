@@ -89,6 +89,19 @@ remove_temp()
     fi
 }
 
+run_post_setup()
+{
+    # refresh current environment
+    if [[ -z $post_setup_ran ]]; then
+        echo "$info" "running post-setup script..."
+        local current_env="$CONDA_DEFAULT_ENV"
+        conda deactivate
+        bash "$script_dir/launch" "$env" "$post_setup"
+        conda activate "$current_env"
+        post_setup_ran=true
+    fi
+}
+
 exit_trap()
 {
     exit_message
@@ -138,8 +151,8 @@ usage()
     # NOTE: if you update this print message, please update README.md
     echo "$help" "usage: $script_name --name PROJECT --file FILE [--file FILE]..."
     echo "$____" "       $___________ [--poetry DIR] [--version VERSION] [--output DIR]"
-    echo "$____" "       $___________ [--no-dev] [--unlock] [--force] [--no-color]"
-    echo "$____" "       $___________ [--quiet] [--help]"
+    echo "$____" "       $___________ [--post-setup SCRIPT] [--no-dev] [--unlock]"
+    echo "$____" "       $___________ [--force] [--no-color] [--quiet] [--help]"
 }
 
 advanced_usage()
@@ -171,6 +184,7 @@ advanced_usage()
     echo "$____" "  --output, -o DIR          Directory where the final $output will go."
     echo "$____" "                            Otherwise, $output will be ouputed to the current"
     echo "$____" "                            working directory."
+    echo "$____" "  --post-setup SCRIPT       Script to run after the environment is setup."
     echo "$____" "  --no-dev                  Do not install dev dependencies for Poetry."
     echo "$____" "  --unlock                  Update Poetry dependencies and overwrite lockfile."
     echo "$____" "  --force                   Overwrite any existing $output at the output path."
@@ -215,6 +229,12 @@ while [[ $# -gt 0 ]]; do
         -o|--output)
             [[ $output_dir ]] && opt_twice_err "--output"
             output_dir="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        --post-setup)
+            [[ $post_setup ]] && opt_twice_err "--post-setup"
+            post_setup="$2"
             shift # past argument
             shift # past value
             ;;
@@ -357,6 +377,11 @@ dep_file="$output_name.yml"
 poetry_lock="poetry.lock"
 mkdir -p "$dep_dir"
 
+# run post-setup here if there are no Poetry dependencies
+if [[ -z $poetry_dir ]]; then
+    run_post_setup
+fi
+
 # export environment to .yml file
 uninstall_cross_compilers
 echo "$info" "exporting pinned dependencies to '$dep_file'..."
@@ -395,12 +420,14 @@ if [[ $poetry_dir ]]; then
     rm -rf "$XDG_CACHE_HOME"
     unset XDG_CACHE_HOME
 
-    uninstall_cross_compilers
     echo "$info" "Complete!"
 
     # revert logging back to default settings
     set_logging "$default_tag"
 fi
+
+run_post_setup
+uninstall_cross_compilers
 
 # run conda-pack to package the environment (or create)
 if [[ $create ]]; then
@@ -417,8 +444,5 @@ else
     echo "$info" "packaging environment via conda-pack..."
     conda pack -o "$output" --arcroot "$output_name" $force $quiet
 fi
-
-# EXIT target environment
-conda deactivate
 
 complete_msg
