@@ -32,7 +32,24 @@ for arg in $@; do
         no_color=true
         ((++min_args))
     fi
+    if [[ $arg == "--color" ]]; then
+        color=true
+        ((++min_args))
+    fi
 done
+
+if [[ ! -t 1 ]]; then
+    # set quiet logging for everything but Poetry
+    log_quiet="--quiet"
+    export PIP_QUIET=1
+
+    # turn off colored output by default
+    no_color=true
+    if [[ $color ]]; then
+        unset no_color
+    fi
+fi
+
 if [[ $no_color ]]; then
     export PIP_NO_COLOR=1
     no_ansi="--no-ansi"
@@ -86,19 +103,19 @@ conda_initiate()
 conda_env_create()
 {
     echo "$info" "creating environment..."
-    conda create -n "$env" --yes $quiet
+    conda create -n "$env" --yes $quiet $log_quiet
 }
 
 conda_env_update()
 {
     echo "$info" "updating environment with '$file' file..."
-    conda env update -n "$env" -f "$file" $quiet
+    conda env update -n "$env" -f "$file" $quiet $log_quiet
 }
 
 conda_env_remove()
 {
     echo "$info" "removing environment..."
-    conda env remove -n "$env" --yes $quiet
+    conda env remove -n "$env" --yes $quiet $log_quiet
 }
 
 remove_old_env()
@@ -136,6 +153,7 @@ usage()
     echo "$s___" "  clean                     Cleanup conda and/or pip cache."
     echo "$s___"
     echo "$s___" "options:"
+    echo "$s___" "  --color                   Force colored output."
     echo "$s___" "  --no-color                Disable colored output."
     echo "$s___" "  --help, -h                Show this help message then exit."
 }
@@ -165,6 +183,9 @@ while [[ $# -gt 0 ]]; do
             set_script_space
             shift # past argument
             source "$script_dir/cpip-clean"
+            ;;
+        --color)
+            shift # past argument
             ;;
         --no-color)
             shift # past argument

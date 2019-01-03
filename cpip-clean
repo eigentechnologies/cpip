@@ -19,6 +19,7 @@ usage()
     echo "$s___"
     echo "$s___" "options:"
     echo "$s___" "  --yes                     Consent to deletion without prompts."
+    echo "$s___" "  --color                   Force colored output."
     echo "$s___" "  --no-color                Disable colored output."
     echo "$s___" "  --quiet, -q               Suppress output for commands."
     echo "$s___" "  --help, -h                Show this help message then exit."
@@ -44,6 +45,9 @@ while [[ $# -gt 0 ]]; do
             ;;
         --yes)
             yes="$1"
+            shift # past argument
+            ;;
+        --color)
             shift # past argument
             ;;
         --no-color)
@@ -81,12 +85,12 @@ remove_old_env
 
 if [[ $slip ]]; then
     echo "$info" "removing source cache, lockfiles, index cache, and packages for conda..."
-    conda clean -slip $yes $quiet
+    conda clean -slip $yes $quiet $log_quiet
 fi
 
 if [[ $tarballs ]]; then
     echo "$info" "removing downloaded tarballs for conda..."
-    conda clean --tarballs $yes $quiet
+    conda clean --tarballs $yes $quiet $log_quiet
 fi
 
 if [[ $pip_cache ]]; then

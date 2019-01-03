@@ -55,7 +55,7 @@ uninstall_cross_compilers()
 {
     if [[ $compilers_installed ]] && [[ $tmp_pkgs ]]; then
         echo "$info" "uninstalling cross-compilers..."
-        conda uninstall ${tmp_pkgs[@]} --yes $quiet
+        conda uninstall ${tmp_pkgs[@]} --yes $quiet $log_quiet
         unset compilers_installed
     fi
 }
@@ -152,7 +152,8 @@ usage()
     echo "$help" "usage: $script_name --name PROJECT --file FILE [--file FILE]..."
     echo "$____" "       $___________ [--poetry DIR] [--version VERSION] [--output DIR]"
     echo "$____" "       $___________ [--post-setup SCRIPT] [--no-dev] [--unlock]"
-    echo "$____" "       $___________ [--force] [--no-color] [--quiet] [--help]"
+    echo "$____" "       $___________ [--force] [--color] [--no-color] [--quiet]"
+    echo "$____" "       $___________ [--help]"
 }
 
 advanced_usage()
@@ -188,6 +189,7 @@ advanced_usage()
     echo "$____" "  --no-dev                  Do not install dev dependencies for Poetry."
     echo "$____" "  --unlock                  Update Poetry dependencies and overwrite lockfile."
     echo "$____" "  --force                   Overwrite any existing $output at the output path."
+    echo "$____" "  --color                   Force colored output."
     echo "$____" "  --no-color                Disable colored output."
     echo "$____" "  --quiet, -q               Suppress output for commands."
     echo "$____" "  --help, -h                Show this help message then exit."
@@ -248,6 +250,9 @@ while [[ $# -gt 0 ]]; do
             ;;
         --force)
             force="$1"
+            shift # past argument
+            ;;
+        --color)
             shift # past argument
             ;;
         --no-color)
@@ -384,8 +389,11 @@ fi
 
 # export environment to .yml file
 uninstall_cross_compilers
+[[ $PIP_QUIET ]] && pip_quiet="$PIP_QUIET"
+unset PIP_QUIET  # <-- only for conda env export
 echo "$info" "exporting pinned dependencies to '$dep_file'..."
 conda env export | grep -v "^prefix: " | grep -v "^$" > "$dep_dir/$dep_file"
+[[ $pip_quiet ]] && export PIP_QUIET="$pip_quiet"
 
 # install pip packages in target environment
 if [[ $poetry_dir ]]; then
@@ -411,6 +419,7 @@ if [[ $poetry_dir ]]; then
     else
         poetry install $no_dev $quiet $ansi $no_ansi
     fi
+    cp "poetry.lock" "$dep_dir"
     cd -
 
     restore_poetry_config
@@ -433,7 +442,7 @@ uninstall_cross_compilers
 if [[ $create ]]; then
     echo "$info" "packaging environment via conda-pack..."
     make_temp
-    conda pack -o "$temp_file" -d "$output" --arcroot "$output_name" --compress-level 0 $force $quiet
+    conda pack -o "$temp_file" -d "$output" --arcroot "$output_name" --compress-level 0 $force $quiet $log_quiet
     cd "$output_dir"
     echo "$info" "unpacking environment..."
     [[ $force ]] && rm -rf "$output"
@@ -442,7 +451,7 @@ if [[ $create ]]; then
     cd -
 else
     echo "$info" "packaging environment via conda-pack..."
-    conda pack -o "$output" --arcroot "$output_name" $force $quiet
+    conda pack -o "$output" --arcroot "$output_name" $force $quiet $log_quiet
 fi
 
 complete_msg
