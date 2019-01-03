@@ -72,7 +72,7 @@ elif [[ $OSTYPE == "darwin"* ]]; then
     gfortran_pkg="gfortran_osx-64"
     macos=true
 else
-    echo "$error" "OS not supported!"
+    >&2 echo "$error" "OS not supported!"
     exit 1
 fi
 
@@ -119,7 +119,7 @@ exit_message()
     # this function must be used at the beginning of the exit trap
     local lc="$BASH_COMMAND" rc=$?
     if [[ $rc -ne 0 ]]; then
-        echo "$error" "Encountered error during execution; exiting now!"
+        >&2 echo "$error" "Encountered error during execution; exiting now!"
     fi
 }
 
@@ -174,8 +174,8 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo "$error" "'$1' not a recognized command"
-            usage
+            >&2 echo "$error" "'$1' not a recognized command"
+            >&2 usage
             exit 1
             ;;
     esac

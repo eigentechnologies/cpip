@@ -25,7 +25,7 @@ install_cross_compilers()
         local pkg_diff="$(conda install --override-channels -c anaconda ${pkgs[@]} --no-update-deps --json --quiet)"
         local install_error="$(echo "$pkg_diff" | jq -r '.error')"
         if [[ $install_error != "null" ]]; then
-            echo -e "$error" "$install_error"
+            >&2 echo -e "$error" "$install_error"
             exit 1
         fi
 
@@ -195,8 +195,8 @@ advanced_usage()
 
 opt_twice_err()
 {
-    echo "$error" "'$1' option cannot be used more than once"
-    usage
+    >&2 echo "$error" "'$1' option cannot be used more than once"
+    >&2 usage
     exit 1
 }
 
@@ -263,8 +263,8 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo "$error" "'$1' not a recognized option"
-            usage
+            >&2 echo "$error" "'$1' not a recognized option"
+            >&2 usage
             exit 1
             ;;
     esac
@@ -272,21 +272,21 @@ done
 
 # check for required options
 if [[ -z $name ]]; then
-    echo "$error" "'--name' option is required"
-    usage
+    >&2 echo "$error" "'--name' option is required"
+    >&2 usage
     exit 1
 fi
 if [[ ${#files[@]} -eq 0 ]]; then
-    echo "$error" "'--file' option is required (atleast once)"
-    usage
+    >&2 echo "$error" "'--file' option is required (atleast once)"
+    >&2 usage
     exit 1
 fi
 
 # make sure environment files exist
 for file in ${files[@]}; do
     if [[ ! -f $file ]]; then
-        echo "$error" "'$file' is either not a file or it doesn't exist"
-        usage
+        >&2 echo "$error" "'$file' is either not a file or it doesn't exist"
+        >&2 usage
         exit 1
     fi
 done
@@ -305,7 +305,7 @@ if [[ -z $output_dir ]]; then
     output_dir="$(pwd)"
 fi
 if [[ ! -d $output_dir ]]; then
-    echo "$error" "'$output_dir' is not a directory or does not exist"
+    >&2 echo "$error" "'$output_dir' is not a directory or does not exist"
     exit 1
 fi
 output_dir="$(readlink -e "$output_dir")"  # <-- set to absolute path
@@ -319,12 +319,12 @@ fi
 if [[ -z $force ]]; then
     if [[ $create ]]; then
         if [[ -f $output || -d $output ]]; then
-            echo "$error" "output folder '$output' already exists; use --force option to overwrite"
+            >&2 echo "$error" "output folder '$output' already exists; use --force option to overwrite"
             exit 1
         fi
     else
         if [[ -f $output || -d $output ]]; then
-            echo "$error" "output file '$output' already exists; use --force option to overwrite"
+            >&2 echo "$error" "output file '$output' already exists; use --force option to overwrite"
             exit 1
         fi
     fi

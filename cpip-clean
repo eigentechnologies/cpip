@@ -59,16 +59,16 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo "$error" "'$1' not a recognized argument/option"
-            usage
+            >&2 echo "$error" "'$1' not a recognized argument/option"
+            >&2 usage
             exit 1
             ;;
     esac
 done
 
 if [[ $arg_count -eq 0 ]]; then
-    echo "$error" "at least one argument is required"
-    usage
+    >&2 echo "$error" "at least one argument is required"
+    >&2 usage
     exit 1
 fi
 
