@@ -30,47 +30,22 @@ given `conda` environment files
 #### 2) Activate Build Environment
 `conda activate cpip`
 
-#### 3) Run 'cpip pack'
-                usage: cpip pack --name PROJECT --file FILE [--file FILE]...
-                                 [--poetry DIR] [--version VERSION] [--output DIR]
-                                 [--no-dev] [--unlock] [--force] [--quiet]
-                                 [--help]
-               
-                Package all dependencies into a portable conda environment tarball
-               
-                required arguments:
-                  --name, -n PROJECT        Name of the project to package. Will be used for
-                                            the name in the output file.
-                  --file, -f FILE           Conda environment file. This option can be used
-                                            multiple times to specify multiple files. The
-                                            environment will be updated in the order that they
-                                            are given on the command line.
-               
-                optional arguments:
-                  --poetry, -p DIR          Poetry project directory.
-                  --version, -v VERSION     Version number to be included in output file name.
-                  --output, -o DIR          Directory where the final tarball will go.
-                                            Otherwise, tarball will be ouputed to the current
-                                            working directory.
-                  --no-dev                  Do not install dev dependencies for Poetry.
-                  --unlock                  Update Poetry dependencies and overwrite lockfile.
-                  --force                   Overwrite any existing archive at the output path.
-                  --quiet, -q               Suppress output for commands.
-                  --help, -h                Show this help message then exit.
+#### 3) Run 'cpip pack' or 'cpip create'
+For more information: `cpip pack --help` or `cpip create --help`
 
 #### 4) Unpack and Activate
-                Initial Setup:
-                  1. untar archive        --> tar -xf <archive>
-                  2. activate environment --> source <archive-root>/bin/activate
-                  3. fix path prefixes    --> conda unpack
-                
-                Normal Use:
-                  *  activate             --> source <archive-root>/bin/activate
-                  *  deactivate           --> source deactivate
+    Initial Setup (if using 'cpip pack'):
+      1. untar archive        --> tar -xf <archive>
+      2. activate environment --> source <root-dir>/bin/activate
+      3. fix path prefixes    --> conda unpack
+    
+    Normal Use:
+      *  activate             --> source <root-dir>/bin/activate
+      *  deactivate           --> source deactivate
 
-                Info:
-                  *  conda dependencies     @ <archive-root>/dependencies/<archive-name>.yml
-                  *  poetry lockfile        @ <archive-root>/dependencies/poetry.lock
+    Info:
+      *  conda dependencies     @ <archive-root>/dependencies/<archive-name>.yml
+      *  poetry lockfile        @ <archive-root>/dependencies/poetry.lock
 
 ## Cleaning Caches
 Use `cpip clean` command to clean the conda and/or pip caches

@@ -132,6 +132,7 @@ usage()
     echo "$s___"
     echo "$s___" "commands:"
     echo "$s___" "  pack                      Package environment into a tarball."
+    echo "$s___" "  create                    Create conda environment."
     echo "$s___" "  clean                     Cleanup conda and/or pip cache."
     echo "$s___"
     echo "$s___" "options:"
@@ -150,6 +151,13 @@ while [[ $# -gt 0 ]]; do
             script_name+=" $1"
             set_script_space
             shift # past argument
+            source "$script_dir/cpip-pack"
+            ;;
+        create)
+            script_name+=" $1"
+            set_script_space
+            shift # past argument
+            create=true
             source "$script_dir/cpip-pack"
             ;;
         clean)

@@ -74,10 +74,63 @@ restore_poetry_config()
     fi
 }
 
+make_temp()
+{
+    temp_dir=$(mktemp -d)
+    temp_file="$temp_dir/$env.tar.gz"
+    temp_created=true
+}
+
+remove_temp()
+{
+    if [[ $temp_created ]]; then
+        rm -rf "$temp_dir"
+        unset temp_created
+    fi
+}
+
 exit_trap()
 {
     exit_message
     restore_poetry_config
+    remove_temp
+}
+
+complete_msg()
+{
+    # NOTE: if you update this print message, please update README.md
+    if [[ $create ]]; then
+        echo "$info" "Complete! Environment is now installed in '$output'"
+        echo "$help" "[Instructions]"
+        echo "$____"
+        echo "$____" "  Normal Use:"
+        echo "$____" "    *  activate             --> source $output/bin/activate"
+        echo "$____" "    *  deactivate           --> source deactivate"
+        echo "$____"
+        echo "$____" "  If in 'envs' folder:"
+        echo "$____" "    *  activate             --> conda activate $output_name"
+        echo "$____" "    *  deactivate           --> conda deactivate"
+        echo "$____"
+        echo "$____" "  Info:"
+        echo "$____" "    *  conda dependencies     @ $output_name/$dep_name/$dep_file"
+        echo "$____" "    *  poetry lockfile        @ $output_name/$dep_name/$poetry_lock"
+    else
+        echo "$info" "Complete! Environment is now packaged in '$output'"
+        echo "$help" "[Instructions]"
+        echo "$____"
+        echo "$____" "  Initial Setup:"
+        echo "$____" "    1. untar archive        --> tar -xf $output_file"
+        echo "$____" "    2. activate environment --> source $output_name/bin/activate"
+        echo "$____" "    3. fix path prefixes    --> conda unpack"
+        echo "$____"
+        echo "$____" "  Normal Use:"
+        echo "$____" "    *  activate             --> source $output_name/bin/activate"
+        echo "$____" "    *  deactivate           --> source deactivate"
+        echo "$____"
+        echo "$____" "  Info:"
+        echo "$____" "    *  conda dependencies     @ $output_name/$dep_name/$dep_file"
+        echo "$____" "    *  poetry lockfile        @ $output_name/$dep_name/$poetry_lock"
+    fi
 }
 
 usage()
@@ -91,14 +144,22 @@ usage()
 
 advanced_usage()
 {
+    
     # NOTE: if you update this print message, please update README.md
     usage
     echo "$____"
-    echo "$____" "Package all dependencies into a portable conda environment tarball"
+    if [[ $create ]]; then
+        local output="folder"
+        echo "$____" "Create a conda environment from the given dependencies"
+    else
+        local output="tarball"
+        echo "$____" "Package all dependencies into a portable conda environment tarball"
+    fi
     echo "$____"
+    
     echo "$____" "required arguments:"
-    echo "$____" "  --name, -n PROJECT        Name of the project to package. Will be used for"
-    echo "$____" "                            the name in the output file."
+    echo "$____" "  --name, -n PROJECT        Name of the project. Will be used for the name in"
+    echo "$____" "                            the output $output."
     echo "$____" "  --file, -f FILE           Conda environment file. This option can be used"
     echo "$____" "                            multiple times to specify multiple files. The"
     echo "$____" "                            environment will be updated in the order that they"
@@ -106,13 +167,13 @@ advanced_usage()
     echo "$____"
     echo "$____" "optional arguments:"
     echo "$____" "  --poetry, -p DIR          Poetry project directory."
-    echo "$____" "  --version, -v VERSION     Version number to be included in output file name."
-    echo "$____" "  --output, -o DIR          Directory where the final tarball will go."
-    echo "$____" "                            Otherwise, tarball will be ouputed to the current"
+    echo "$____" "  --version, -v VERSION     Version number to be included in output $output."
+    echo "$____" "  --output, -o DIR          Directory where the final $output will go."
+    echo "$____" "                            Otherwise, $output will be ouputed to the current"
     echo "$____" "                            working directory."
     echo "$____" "  --no-dev                  Do not install dev dependencies for Poetry."
     echo "$____" "  --unlock                  Update Poetry dependencies and overwrite lockfile."
-    echo "$____" "  --force                   Overwrite any existing archive at the output path."
+    echo "$____" "  --force                   Overwrite any existing $output at the output path."
     echo "$____" "  --no-color                Disable colored output."
     echo "$____" "  --quiet, -q               Suppress output for commands."
     echo "$____" "  --help, -h                Show this help message then exit."
@@ -218,25 +279,36 @@ if [[ $version ]]; then
     fi 
     output_name+="-$version"
 fi
-output_file="$output_name.tar.gz"
 
 # set full output path
-output="$output_file"
-if [[ $output_dir ]]; then
-    if [[ ! -d $output_dir ]]; then
-        echo "$error" "'$output_dir' is not a directory or does not exist"
-        exit 1
-    fi 
+if [[ -z $output_dir ]]; then
+    output_dir="$(pwd)"
+fi
+if [[ ! -d $output_dir ]]; then
+    echo "$error" "'$output_dir' is not a directory or does not exist"
+    exit 1
+fi
+output_dir="$(readlink -e "$output_dir")"  # <-- set to absolute path
+if [[ $create ]]; then 
+    output="$output_dir/$output_name"
+else
+    output_file="$output_name.tar.gz"
     output="$output_dir/$output_file"
 fi
 
-# check if output already exists
-if [[ -f $output || -d $output ]]; then
-    if [[ -z $force ]]; then
-        echo "$error" "output file '$output' already exists; use --force option to overwrite"
-        exit 1
+if [[ -z $force ]]; then
+    if [[ $create ]]; then
+        if [[ -f $output || -d $output ]]; then
+            echo "$error" "output folder '$output' already exists; use --force option to overwrite"
+            exit 1
+        fi
+    else
+        if [[ -f $output || -d $output ]]; then
+            echo "$error" "output file '$output' already exists; use --force option to overwrite"
+            exit 1
+        fi
     fi
-fi 
+fi
 
 # exit as soon as a command fails and print error
 trap exit_trap EXIT
@@ -330,28 +402,23 @@ if [[ $poetry_dir ]]; then
     set_logging "$default_tag"
 fi
 
-# run conda-pack to package the environment
-echo "$info" "packaging environment via conda-pack..."
-conda pack -o "$output" --arcroot "$output_name" $force $quiet
+# run conda-pack to package the environment (or create)
+if [[ $create ]]; then
+    echo "$info" "packaging environment via conda-pack..."
+    make_temp
+    conda pack -o "$temp_file" -d "$output" --arcroot "$output_name" --compress-level 0 $force $quiet
+    cd "$output_dir"
+    echo "$info" "unpacking environment..."
+    [[ $force ]] && rm -rf "$output"
+    tar -xf "$temp_file"
+    remove_temp
+    cd -
+else
+    echo "$info" "packaging environment via conda-pack..."
+    conda pack -o "$output" --arcroot "$output_name" $force $quiet
+fi
 
 # EXIT target environment
 conda deactivate
 
-output="$(readlink -e "$output")"  # <-- set to absolute path
-
-# NOTE: if you update this print message, please update README.md
-echo "$info" "Complete! Environment is now packaged in '$output'"
-echo "$help" "[Instructions]"
-echo "$____"
-echo "$____" "  Initial Setup:"
-echo "$____" "    1. untar archive        --> tar -xf $output_file"
-echo "$____" "    2. activate environment --> source $output_name/bin/activate"
-echo "$____" "    3. fix path prefixes    --> conda unpack"
-echo "$____"
-echo "$____" "  Normal Use:"
-echo "$____" "    *  activate             --> source $output_name/bin/activate"
-echo "$____" "    *  deactivate           --> source deactivate"
-echo "$____"
-echo "$____" "  Info:"
-echo "$____" "    *  conda dependencies     @ $output_name/$dep_name/$dep_file"
-echo "$____" "    *  poetry lockfile        @ $output_name/$dep_name/$poetry_lock"
+complete_msg
