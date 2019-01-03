@@ -295,7 +295,7 @@ done
 output_name="$name"
 if [[ $version ]]; then
     if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then 
-        echo "$warning" "'$version' does not match numerical format X.Y.Z"
+        >&2 echo "$warning" "'$version' does not match numerical format X.Y.Z"
     fi 
     output_name+="-$version"
 fi
@@ -348,7 +348,7 @@ pip_count=0
 for file in ${files[@]}; do
     # warn user for pip dependencies
     if [[ $(cat "$file" | egrep "^\s*-\s+pip:\s*$" | wc -l) -gt 0 ]]; then
-        echo "$warning" "found pip dependencies in '$file'; this is not recommended!"
+        >&2 echo "$warning" "found pip dependencies in '$file'; this is not recommended!"
         ((++pip_count))
     fi
 done
