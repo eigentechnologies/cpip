@@ -1,14 +1,15 @@
 # cpip
 
 ## What is it?
-This tool creates a `conda` environment and packages it into
-a portable tarball, including its `pip` dependencies.
+This tool creates a `conda` environment, with `pip` dependencies,
+in any desired location, or packages it into a portable tarball. 
 
 ## How does it work?
 1. Assembles an environment with basic `conda` commands from
 given `conda` environment files
 1. Installs cross-compilers and downloads/compiles `pip` packages
 1. Packages `conda` environment via `conda-pack` tool
+1. Unpacks environment to desired location (optional with `create` command)
 
 ## Supported Operating Systems
 - Linux
