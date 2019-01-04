@@ -99,8 +99,7 @@ remove_temp()
 
 run_post_setup()
 {
-    # refresh current environment
-    if [[ -z $post_setup_ran ]]; then
+    if [[ $post_setup && -z $post_setup_ran ]]; then
         echo "$info" "running post-setup script..."
         local current_env="$CONDA_DEFAULT_ENV"
         conda deactivate
