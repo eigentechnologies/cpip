@@ -1,5 +1,16 @@
 #!/bin/bash
 
+create_and_activate()
+{
+    # create and ENTER target environment
+    conda_env_create
+    conda activate "$env"
+
+    # remove 'defaults' for to enforce consistency
+    conda config --env --remove channels defaults
+
+}
+
 set_compiler_env()
 {
     # refresh current environment
@@ -44,7 +55,10 @@ install_cross_compilers()
         [[ $add ]] && [[ $sub ]] &&
             tmp_pkgs="$(echo "{\"add\": $add, \"sub\": $sub}" | jq '.add-.sub')"
         [[ $tmp_pkgs ]] &&
-            tmp_pkgs="$(echo $tmp_pkgs | jq -r '.[]' | grep -v "^lib")"
+            tmp_pkgs="$(echo $tmp_pkgs | jq -r '.[]')"
+        local lib_regex="^lib"
+        lib_pkgs="$(echo $tmp_pkgs | grep "$lib_regex")"
+        tmp_pkgs="$(echo $tmp_pkgs | grep -v "$lib_regex")"
 
         set_compiler_env
         compilers_installed=true
@@ -57,6 +71,13 @@ uninstall_cross_compilers()
         echo "$info" "uninstalling cross-compilers..."
         conda uninstall ${tmp_pkgs[@]} --yes $quiet $log_quiet
         unset compilers_installed
+    fi
+}
+
+install_lib_pkgs()
+{
+    if [[ $lib_pkgs ]]; then
+        conda install --override-channels -c anaconda ${lib_pkgs[@]} --no-update-deps --yes $quiet $log_quiet
     fi
 }
 
@@ -99,13 +120,12 @@ remove_temp()
 
 run_post_setup()
 {
-    if [[ $post_setup && -z $post_setup_ran ]]; then
-        echo "$info" "running post-setup script..."
+    if [[ $post_setup ]]; then
         local current_env="$CONDA_DEFAULT_ENV"
+        echo "$info" "running post-setup script..."
         conda deactivate
         bash "$src_dir/launch" "$env" "$post_setup"
         conda activate "$current_env"
-        post_setup_ran=true
     fi
 }
 
@@ -347,30 +367,46 @@ conda_initiate
 set_pip_cache_dir
 echo "$info" "using pip cache directory '$PIP_CACHE_DIR'"
 
-remove_old_env
-
-pip_count=0
+pip_files=()
 
 # scan for pip dependencies
 for file in ${files[@]}; do
     # warn user for pip dependencies
     if [[ $(cat "$file" | egrep "^\s*-\s+pip:\s*$" | wc -l) -gt 0 ]]; then
         >&2 echo "$warning" "found pip dependencies in '$file'; this is not recommended!"
-        ((++pip_count))
+        pip_files+=("$file")
     fi
 done
 
-# create and ENTER target environment
-conda_env_create
-conda activate "$env"
+if [[ ${#pip_files[@]} -gt 0 ]]; then
+    pip_install="${bold}[${yellow}pip-install${reset}${bold}]${reset}"
+    echo "$info" "pip dependencies were found in ${#pip_files[@]} files: running $pip_install..."
 
-# remove 'defaults' for to enforce consistency
-conda config --env --remove channels defaults
+    # change logging for pip_install
+    set_logging "$default_tag $pip_install"
 
-# install cross compilers to compile pip packages
-if [[ $pip_count -gt 0 ]]; then
+    remove_old_env
+
+    # create and ENTER target environment
+    create_and_activate
+
     install_cross_compilers
+
+    # update the environment
+    for file in ${pip_files[@]}; do
+        conda_env_update
+    done
+
+    echo "$info" "Complete!"
+
+    # revert logging back to default settings
+    set_logging "$default_tag"
 fi
+
+remove_old_env
+
+# create and ENTER target environment
+create_and_activate
 
 # update the environment 
 for file in ${files[@]}; do
@@ -383,19 +419,6 @@ dep_dir="$CONDA_PREFIX/$dep_name"
 dep_file="$output_name.yml"
 poetry_lock="poetry.lock"
 mkdir -p "$dep_dir"
-
-# run post-setup here if there are no Poetry dependencies
-if [[ -z $poetry_dir ]]; then
-    run_post_setup
-fi
-
-# export environment to .yml file
-uninstall_cross_compilers
-[[ $PIP_QUIET ]] && pip_quiet="$PIP_QUIET"
-unset PIP_QUIET  # <-- only for conda env export
-echo "$info" "exporting pinned dependencies to '$dep_file'..."
-conda env export | grep -v "^prefix: " | grep -v "^$" > "$dep_dir/$dep_file"
-[[ $pip_quiet ]] && export PIP_QUIET="$pip_quiet"
 
 # install pip packages in target environment
 if [[ $poetry_dir ]]; then
@@ -422,7 +445,7 @@ if [[ $poetry_dir ]]; then
     else
         poetry install $no_dev $quiet $ansi $no_ansi
     fi
-    cp "poetry.lock" "$dep_dir"
+    cp "$poetry_lock" "$dep_dir"
     cd -
 
     restore_poetry_config
@@ -438,8 +461,20 @@ if [[ $poetry_dir ]]; then
     set_logging "$default_tag"
 fi
 
+# run post-setup
+[[ $post_setup ]] && install_cross_compilers
 run_post_setup
 uninstall_cross_compilers
+
+# install library packages from cross-compilers
+install_lib_pkgs
+
+# export environment to .yml file
+[[ $PIP_QUIET ]] && pip_quiet="$PIP_QUIET"
+unset PIP_QUIET  # <-- only for conda env export
+echo "$info" "exporting pinned dependencies to '$dep_file'..."
+conda env export | grep -v "^prefix: " | grep -v "^$" > "$dep_dir/$dep_file"
+[[ $pip_quiet ]] && export PIP_QUIET="$pip_quiet"
 
 # run conda-pack to package the environment (or create)
 if [[ $create ]]; then
