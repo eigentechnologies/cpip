@@ -76,13 +76,6 @@ detected. After installing all the `pip` dependencies, the compilers
 will be removed but the associated libraries will remain for the
 final package.
 
-**NOTE:** If you have any `pip` dependencies AND any cross-compilers
-defined in your environment files, the cross-compilers will be removed
-regardless of the fact you defined them to be there. Defining all `pip`
-dependencies via `poetry` will prevent this from happening. Although,
-its questionable why one would want to ship cross-compilers with a
-portable environment in the first place.
-
 #### Order of Environments
 This tool can take more than one `conda` environment file.
 These files will be loaded in the order they are given on
