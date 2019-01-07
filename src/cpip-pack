@@ -158,11 +158,17 @@ exit_trap()
 
 complete_msg()
 {
+    if [[ $poetry_dir ]]; then
+        local poetry_lockfile="$output_name/$dep_name/$poetry_lock"
+    else
+        local poetry_lockfile="NOT_APPLICABLE"
+    fi
+
     # NOTE: if you update this print message, please update README.md
+    echo     "$info" "Complete! Environment is now installed in '$output'"
+    echo     "$help" "[Instructions]"
+    echo     "$____"
     if [[ $create ]]; then
-        echo "$info" "Complete! Environment is now installed in '$output'"
-        echo "$help" "[Instructions]"
-        echo "$____"
         echo "$____" "  Normal Use:"
         echo "$____" "    *  activate             --> source $output/bin/activate"
         echo "$____" "    *  deactivate           --> source deactivate"
@@ -170,14 +176,7 @@ complete_msg()
         echo "$____" "  If in 'envs' folder:"
         echo "$____" "    *  activate             --> conda activate $output_name"
         echo "$____" "    *  deactivate           --> conda deactivate"
-        echo "$____"
-        echo "$____" "  Info:"
-        echo "$____" "    *  conda dependencies     @ $output_name/$dep_name/$dep_file"
-        echo "$____" "    *  poetry lockfile        @ $output_name/$dep_name/$poetry_lock"
     else
-        echo "$info" "Complete! Environment is now packaged in '$output'"
-        echo "$help" "[Instructions]"
-        echo "$____"
         echo "$____" "  Initial Setup:"
         echo "$____" "    1. untar archive        --> tar -xf $output_file"
         echo "$____" "    2. activate environment --> source $output_name/bin/activate"
@@ -186,11 +185,11 @@ complete_msg()
         echo "$____" "  Normal Use:"
         echo "$____" "    *  activate             --> source $output_name/bin/activate"
         echo "$____" "    *  deactivate           --> source deactivate"
-        echo "$____"
-        echo "$____" "  Info:"
-        echo "$____" "    *  conda dependencies     @ $output_name/$dep_name/$dep_file"
-        echo "$____" "    *  poetry lockfile        @ $output_name/$dep_name/$poetry_lock"
     fi
+    echo     "$____"
+    echo     "$____" "  Info:"
+    echo     "$____" "    *  conda dependencies     @ $output_name/$dep_name/$dep_file"
+    echo     "$____" "    *  poetry lockfile        @ $poetry_lockfile"
 }
 
 usage()
