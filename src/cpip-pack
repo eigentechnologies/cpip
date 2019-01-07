@@ -8,7 +8,6 @@ create_and_activate()
 
     # remove 'defaults' for to enforce consistency
     conda config --env --remove channels defaults
-
 }
 
 set_compiler_env()
@@ -54,11 +53,11 @@ install_cross_compilers()
             tmp_pkgs="$add"
         [[ $add ]] && [[ $sub ]] &&
             tmp_pkgs="$(echo "{\"add\": $add, \"sub\": $sub}" | jq '.add-.sub')"
-        [[ $tmp_pkgs ]] &&
-            tmp_pkgs="$(echo $tmp_pkgs | jq -r '.[]')"
-        local lib_regex="^lib"
-        lib_pkgs="$(echo $tmp_pkgs | grep "$lib_regex")"
-        tmp_pkgs="$(echo $tmp_pkgs | grep -v "$lib_regex")"
+
+        if [[ $tmp_pkgs ]]; then
+            lib_pkgs="$(echo $tmp_pkgs | jq -r '.[]' | grep "^lib")"
+            tmp_pkgs="$(echo $tmp_pkgs | jq -r '.[]' | grep -v "^lib")"
+        fi
 
         set_compiler_env
         compilers_installed=true
@@ -78,6 +77,27 @@ install_lib_pkgs()
 {
     if [[ $lib_pkgs ]]; then
         conda install --override-channels -c anaconda ${lib_pkgs[@]} --no-update-deps --yes $quiet $log_quiet
+    fi
+}
+
+set_pip_local_install()
+{
+    export PIP_ONLY_BINARY=":all:"
+    export PIP_FIND_LINKS="$(find "$PIP_CACHE_DIR/wheels" -name *.whl)"
+
+    # turn off pip verbosity since the messages will be redundant
+    [[ $PIP_QUIET ]] && pip_quiet="$PIP_QUIET"
+    export PIP_QUIET=1
+}
+
+unset_pip_local_install()
+{
+    unset PIP_ONLY_BINARY
+    unset PIP_FIND_LINKS
+
+    # restore PIP_QUIET
+    if [[ $pip_quiet ]]; then
+        export PIP_QUIET="$pip_quiet"
     fi
 }
 
@@ -345,12 +365,12 @@ fi
 
 if [[ -z $force ]]; then
     if [[ $create ]]; then
-        if [[ -f $output || -d $output ]]; then
+        if [[ -f $output ]] || [[ -d $output ]]; then
             >&2 echo "$error" "output folder '$output' already exists; use --force option to overwrite"
             exit 1
         fi
     else
-        if [[ -f $output || -d $output ]]; then
+        if [[ -f $output ]] || [[ -d $output ]]; then
             >&2 echo "$error" "output file '$output' already exists; use --force option to overwrite"
             exit 1
         fi
@@ -380,7 +400,7 @@ done
 
 if [[ ${#pip_files[@]} -gt 0 ]]; then
     pip_install="${bold}[${yellow}pip-install${reset}${bold}]${reset}"
-    echo "$info" "pip dependencies were found in ${#pip_files[@]} files: running $pip_install..."
+    echo "$info" "pip dependencies were found in ${#pip_files[@]} file(s): running $pip_install..."
 
     # change logging for pip_install
     set_logging "$default_tag $pip_install"
@@ -397,6 +417,10 @@ if [[ ${#pip_files[@]} -gt 0 ]]; then
         conda_env_update
     done
 
+    # EXIT target environment and setup pip to only use local wheels
+    conda deactivate
+    set_pip_local_install
+
     echo "$info" "Complete!"
 
     # revert logging back to default settings
@@ -404,6 +428,7 @@ if [[ ${#pip_files[@]} -gt 0 ]]; then
 fi
 
 remove_old_env
+unset compilers_installed
 
 # create and ENTER target environment
 create_and_activate
@@ -429,6 +454,7 @@ if [[ $poetry_dir ]]; then
     set_logging "$default_tag $poetry_install"
    
     poetry_dir="$(readlink -e "$poetry_dir")"  # <-- set to absolute path
+    unset_pip_local_install
     install_pip
     install_cross_compilers
     set_poetry_config
@@ -470,11 +496,9 @@ uninstall_cross_compilers
 install_lib_pkgs
 
 # export environment to .yml file
-[[ $PIP_QUIET ]] && pip_quiet="$PIP_QUIET"
 unset PIP_QUIET  # <-- only for conda env export
 echo "$info" "exporting pinned dependencies to '$dep_file'..."
 conda env export | grep -v "^prefix: " | grep -v "^$" > "$dep_dir/$dep_file"
-[[ $pip_quiet ]] && export PIP_QUIET="$pip_quiet"
 
 # run conda-pack to package the environment (or create)
 if [[ $create ]]; then
