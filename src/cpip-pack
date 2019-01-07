@@ -249,11 +249,19 @@ opt_twice_err()
     exit 1
 }
 
+missing_val_err()
+{
+    >&2 echo "$error" "'$1' option requires a value"
+    >&2 usage
+    exit 1
+}
+
 files=()
 while [[ $# -gt 0 ]]; do
     case $1 in
         -n|--name)
             [[ $name ]] && opt_twice_err "--name"
+            [[ -z $2 ]] && missing_val_err "--name"
             name="$2"
             shift # past argument
             shift # past value
@@ -265,24 +273,28 @@ while [[ $# -gt 0 ]]; do
             ;;
         -p|--poetry)
             [[ $poetry_dir ]] && opt_twice_err "--poetry"
+            [[ -z $2 ]] && missing_val_err "--poetry"
             poetry_dir="$2"
             shift # past argument
             shift # past value
             ;;
         -v|--version)
             [[ $version ]] && opt_twice_err "--version"
+            [[ -z $2 ]] && missing_val_err "--version"
             version="$2"
             shift # past argument
             shift # past value
             ;;
         -o|--output)
             [[ $output_dir ]] && opt_twice_err "--output"
+            [[ -z $2 ]] && missing_val_err "--output"
             output_dir="$2"
             shift # past argument
             shift # past value
             ;;
         --post-setup)
             [[ $post_setup ]] && opt_twice_err "--post-setup"
+            [[ -z $2 ]] && missing_val_err "--post-setup"
             post_setup="$2"
             shift # past argument
             shift # past value
