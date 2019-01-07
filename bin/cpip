@@ -42,7 +42,7 @@ done
 if [[ ! -t 1 ]]; then
     # set quiet logging for everything but Poetry
     log_quiet="--quiet"
-    export PIP_QUIET=1
+    export PIP_PROGRESS_BAR="off"
 
     # turn off colored output by default
     no_color=true

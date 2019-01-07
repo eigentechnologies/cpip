@@ -82,6 +82,7 @@ install_lib_pkgs()
 
 set_pip_local_install()
 {
+    mkdir -p "$PIP_CACHE_DIR/wheels"  # <-- suppress warning for missing directory
     export PIP_ONLY_BINARY=":all:"
     export PIP_FIND_LINKS="$(find "$PIP_CACHE_DIR/wheels" -name *.whl)"
 
