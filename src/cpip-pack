@@ -68,7 +68,7 @@ uninstall_cross_compilers()
 {
     if [[ $compilers_installed ]] && [[ $tmp_pkgs ]]; then
         echo "$info" "uninstalling cross-compilers..."
-        conda uninstall ${tmp_pkgs[@]} --yes $quiet $log_quiet
+        conda uninstall ${tmp_pkgs[@]} --force --yes $quiet $log_quiet
         unset compilers_installed
     fi
 }
