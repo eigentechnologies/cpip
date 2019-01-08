@@ -196,7 +196,7 @@ complete_msg()
         echo "$____" "  Initial Setup:"
         echo "$____" "    1. untar archive        --> tar -xf $output_file"
         echo "$____" "    2. activate environment --> source $name/bin/activate"
-        echo "$____" "    3. fix path prefixes    --> conda unpack"
+        echo "$____" "    3. fix path prefixes    --> conda-unpack"
         echo "$____"
         echo "$____" "  Normal Use:"
         echo "$____" "    *  activate             --> source $name/bin/activate"
@@ -537,7 +537,7 @@ conda env export | grep -v "^prefix: " | grep -v "^$" > "$dep_dir/$dep_file"
 if [[ $create ]]; then
     echo "$info" "packaging environment via conda-pack..."
     make_temp
-    conda pack -o "$temp_file" -d "$output" --arcroot "$name" --compress-level 0 $force $quiet $log_quiet
+    conda-pack -o "$temp_file" -d "$output" --arcroot "$name" --compress-level 0 $force $quiet $log_quiet
     cd "$output_dir"
     echo "$info" "unpacking environment..."
     [[ $force ]] && rm -rf "$output"
@@ -546,7 +546,7 @@ if [[ $create ]]; then
     cd -
 else
     echo "$info" "packaging environment via conda-pack..."
-    conda pack -o "$output" --arcroot "$name" $force $quiet $log_quiet
+    conda-pack -o "$output" --arcroot "$name" $force $quiet $log_quiet
 fi
 
 complete_msg

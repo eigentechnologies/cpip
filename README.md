@@ -38,7 +38,7 @@ For more information: `cpip pack --help` or `cpip create --help`
     Initial Setup (if using 'cpip pack'):
       1. untar archive        --> tar -xf <archive>
       2. activate environment --> source <root-dir>/bin/activate
-      3. fix path prefixes    --> conda unpack
+      3. fix path prefixes    --> conda-unpack
     
     Normal Use:
       *  activate             --> source <root-dir>/bin/activate
