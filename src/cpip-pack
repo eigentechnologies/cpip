@@ -28,7 +28,7 @@ set_compiler_env()
 install_cross_compilers()
 {
     if [[ -z $compilers_installed ]]; then
-        echo "$info" "installing cross-compilers for pip packages..."
+        echo "$info" "installing cross-compilers..."
         
         # install cross compilers
         local pkgs=("$cc_pkg" "$cxx_pkg" "$gfortran_pkg")
@@ -75,7 +75,7 @@ uninstall_cross_compilers()
 
 install_lib_pkgs()
 {
-    if [[ $lib_pkgs ]]; then
+    if [[ $lib_pkgs ]] && [[ ${#lib_pkgs[@]} -gt 0 ]]; then
         echo "$info" "installing cross-compiler library packages..."
         conda install --override-channels -c anaconda ${lib_pkgs[@]} --no-update-deps --yes $quiet $log_quiet
     fi
@@ -401,7 +401,6 @@ fi
 # exit as soon as a command fails and print error
 trap err_trap  ERR SIGINT SIGTERM SIGKILL
 trap exit_trap EXIT
-set -e
 
 conda_initiate
 

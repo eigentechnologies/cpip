@@ -73,7 +73,6 @@ fi
 
 # exit as soon as a command fails and print error
 trap err_trap ERR SIGINT SIGTERM SIGKILL
-set -e
 
 conda_initiate
 remove_old_env
