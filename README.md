@@ -74,7 +74,8 @@ to a `poetry` project `.toml` file.
 Cross-compilers will be installed for if any `pip` dependencies are
 detected. After installing all the `pip` dependencies, the compilers
 will be removed but the associated libraries will remain for the
-final package.
+final package. If any libraries were in the environment before,
+they will be replaced, and potentially with different versions.
 
 #### Order of Environments
 This tool can take more than one `conda` environment file.
