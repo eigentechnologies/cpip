@@ -138,8 +138,8 @@ err_trap()
     local lc="$BASH_COMMAND" rc=$?
     if [[ $rc -ne 0 ]]; then
         >&2 echo "$error" "Command [${red}$lc${reset}] failed with exit code [${red}$rc${reset}]"
-        exit $rc
     fi
+    exit $rc
 }
 
 usage()
