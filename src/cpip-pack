@@ -25,12 +25,25 @@ set_compiler_env()
     fi
 }
 
+jq_diff()
+{
+    local add="$1" sub="$2"
+    echo "{\"add\": $add, \"sub\": $sub}" | jq '.add-.sub'
+}
+
 install_cross_compilers()
 {
     if [[ -z $compilers_installed ]]; then
-        echo "$info" "installing cross-compilers..."
-        
+        if [[ $compiler_pkgs ]]; then 
+            echo "$info" "uninstalling interfering cross-compiler packages..."
+            local current_pkgs="$(conda list --json | jq '[.[].name]')"
+            local missing_pkgs="$(jq_diff "$compiler_pkgs" "$current_pkgs")"
+            local interfering_pkgs="$(jq_diff "$compiler_pkgs" "$missing_pkgs" | jq -r '.[]')"
+            conda uninstall ${interfering_pkgs[@]} --force --yes $quiet $log_quiet
+        fi
+
         # install cross compilers
+        echo "$info" "installing cross-compilers..."
         local pkgs=("$cc_pkg" "$cxx_pkg" "$gfortran_pkg")
         local pkg_diff="$(conda install --override-channels -c anaconda ${pkgs[@]} --no-update-deps --json --quiet)"
         local install_error="$(echo "$pkg_diff" | jq -r '.error')"
@@ -39,7 +52,7 @@ install_cross_compilers()
             exit 1
         fi
 
-        # filter out only packages than were added, NOT updated/downgraded
+        # find added and deleted packages
         local actions="$(echo "$pkg_diff" | jq '.actions')"
         [[ $actions != "null" ]] &&
             local link="$(echo "$actions" | jq '.LINK')"
@@ -49,19 +62,26 @@ install_cross_compilers()
             local add="$(echo "$link" | jq '[.[].name]')"
         [[ $unlink ]] && [[ $unlink != "null" ]] &&
             local sub="$(echo "$unlink" | jq '[.[].name]')"
+        
+        # filter out only packages that were added, NOT updated/downgraded
+        all_compiler_pkgs="$add"
         [[ $add ]] &&
             tmp_pkgs="$add"
         [[ $add ]] && [[ $sub ]] &&
-            tmp_pkgs="$(echo "{\"add\": $add, \"sub\": $sub}" | jq '.add-.sub')"
-
-        if [[ $tmp_pkgs ]]; then
-            lib_pkgs="$(echo $tmp_pkgs | jq -r '.[]' | grep "^lib")"
+            tmp_pkgs="$(jq_diff "$add" "$sub")"
+        
+        # library packages stay, the rest are temporary
+        [[ $tmp_pkgs ]] &&
             tmp_pkgs="$(echo $tmp_pkgs | jq -r '.[]' | grep -v "^lib")"
-        fi
 
         set_compiler_env
         compilers_installed=true
     fi
+}
+
+set_cross_compiler_pkgs()
+{
+    compiler_pkgs="$all_compiler_pkgs"
 }
 
 uninstall_cross_compilers()
@@ -70,14 +90,6 @@ uninstall_cross_compilers()
         echo "$info" "uninstalling cross-compilers..."
         conda uninstall ${tmp_pkgs[@]} --force --yes $quiet $log_quiet
         unset compilers_installed
-    fi
-}
-
-install_lib_pkgs()
-{
-    if [[ $lib_pkgs ]] && [[ ${#lib_pkgs[@]} -gt 0 ]]; then
-        echo "$info" "installing cross-compiler library packages..."
-        conda install --override-channels -c anaconda ${lib_pkgs[@]} --no-update-deps --yes $quiet $log_quiet
     fi
 }
 
@@ -419,19 +431,20 @@ for file in ${files[@]}; do
     fi
 done
 
+# remove old target environment, recreate and ENTER
+remove_old_env
+create_and_activate
+
+# set the full array of cross-compiler packages
+install_cross_compilers
+set_cross_compiler_pkgs
+
 if [[ ${#pip_files[@]} -gt 0 ]]; then
     pip_install="${bold}[${yellow}pip-install${reset}${bold}]${reset}"
     echo "$info" "pip dependencies were found in ${#pip_files[@]} file(s): running $pip_install..."
 
     # change logging for pip_install
     set_logging "$default_tag $pip_install"
-
-    remove_old_env
-
-    # create and ENTER target environment
-    create_and_activate
-
-    install_cross_compilers
 
     # update the environment
     for file in ${pip_files[@]}; do
@@ -508,13 +521,12 @@ if [[ $poetry_dir ]]; then
     set_logging "$default_tag"
 fi
 
-# run post-setup
+# for pip_install, we need to reinstall cross-compilers for the associated libraries
+[[ $pip_install ]] && install_cross_compilers
+# for post_setup, we need to use the same build environment we use for pip packages 
 [[ $post_setup ]] && install_cross_compilers
 run_post_setup
-uninstall_cross_compilers
-
-# install library packages from cross-compilers
-install_lib_pkgs
+uninstall_cross_compilers  # <-- uninstall cross-compilers, but keep libraries 
 
 # export environment to .yml file
 unset PIP_QUIET  # <-- only for conda env export
