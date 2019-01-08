@@ -132,12 +132,13 @@ set_pip_cache_dir()
     export PIP_CACHE_DIR="$CONDA_PREFIX/pip/cache"
 }
 
-exit_message()
+err_trap()
 {
     # this function must be used at the beginning of the exit trap
     local lc="$BASH_COMMAND" rc=$?
     if [[ $rc -ne 0 ]]; then
-        >&2 echo "$error" "Encountered error during execution; exiting now!"
+        >&2 echo "$error" "Command [${red}$lc${reset}] failed with exit code [${red}$rc${reset}]"
+        exit $rc
     fi
 }
 

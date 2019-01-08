@@ -76,6 +76,7 @@ uninstall_cross_compilers()
 install_lib_pkgs()
 {
     if [[ $lib_pkgs ]]; then
+        echo "$info" "installing cross-compiler library packages..."
         conda install --override-channels -c anaconda ${lib_pkgs[@]} --no-update-deps --yes $quiet $log_quiet
     fi
 }
@@ -152,7 +153,6 @@ run_post_setup()
 
 exit_trap()
 {
-    exit_message
     restore_poetry_config
     remove_temp
 }
@@ -390,6 +390,7 @@ if [[ -z $force ]]; then
 fi
 
 # exit as soon as a command fails and print error
+trap err_trap  ERR SIGINT SIGTERM SIGKILL
 trap exit_trap EXIT
 set -e
 
