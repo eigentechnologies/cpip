@@ -5,6 +5,7 @@ This tool builds a `conda` environment with `pip` dependencies together
 in a way that allows for cross-distro/cross-version compatibility.
 
 They are two ways to use `cpip`:
+
 - `cpip pack` will package the environment into a portable tarball.
 - `cpip create` will simply create a ready-to-use environement.
 
@@ -96,6 +97,7 @@ slightly different environments.
 
 #### Concurrency
 Multiple `cpip` processes can be run concurrently if we do the following:
+
 - if not using a `poetry` lockfile, use seperate `poetry` project directories
 - create a build environment for each process, i.e. for process `X`
   1. `conda env create -n cpip-X -f cpip.yml`
