@@ -1,8 +1,16 @@
 # cpip
 
 ## What is it?
-This tool creates a `conda` environment, with `pip` dependencies,
-in any desired location, or packages it into a portable tarball. 
+This tool builds a `conda` environment with `pip` dependencies together
+in a way that allows for cross-distro/cross-version compatibility.
+
+They are two ways to use `cpip`:
+- `cpip pack` will package the environment into a portable tarball.
+- `cpip create` will simply create a ready-to-use environement.
+
+The advantage of having a `create` command gives the user the option
+to create the environment in the exact same way as the one that will
+be deployed via the `pack` command.
 
 ## How does it work?
 1. Assembles an environment with basic `conda` commands from
@@ -37,16 +45,19 @@ For more information: `cpip pack --help` or `cpip create --help`
 #### 4) Unpack and Activate
     Initial Setup (if using 'cpip pack'):
       1. untar archive        --> tar -xf <archive>
-      2. activate environment --> source <root-dir>/bin/activate
+      2. activate environment --> source <env-root>/bin/activate
       3. fix path prefixes    --> conda-unpack
     
     Normal Use:
-      *  activate             --> source <root-dir>/bin/activate
+      *  activate             --> source <env-root>/bin/activate
       *  deactivate           --> source deactivate
 
     Info:
-      *  conda dependencies     @ <archive-root>/dependencies/<archive-name>.yml
-      *  poetry lockfile        @ <archive-root>/dependencies/poetry.lock
+      *  conda dependencies     @ <env-root>/dependencies/<env-name>.yml
+      *  poetry lockfile        @ <env-root>/dependencies/poetry.lock
+
+**NOTE:** It's possible to change the path of `<env-root>` after
+untarring, as long that is done prior to running `conda-unpack`.
 
 ## Cleaning Caches
 Use `cpip clean` command to clean the conda and/or pip caches
