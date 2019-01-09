@@ -35,7 +35,7 @@ given `conda` environment files
 ## Usage
 
 #### 1) Create Build Environment
-`conda env create -f cpip`
+`conda env create -f cpip.yml`
 
 #### 2) Activate Build Environment
 `conda activate cpip`
