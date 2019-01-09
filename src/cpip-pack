@@ -172,7 +172,7 @@ exit_trap()
 complete_msg()
 {
     if [[ $poetry_dir ]]; then
-        local poetry_lockfile="$name/$dep_name/$poetry_lock"
+        local poetry_lockfile="'$name/$dep_name/$poetry_lock'"
     else
         local poetry_lockfile="NOT_APPLICABLE"
     fi
@@ -183,28 +183,28 @@ complete_msg()
         echo "$help" "[Instructions]"
         echo "$____"
         echo "$____" "  Normal Use:"
-        echo "$____" "    *  activate             --> source $output/bin/activate"
+        echo "$____" "    *  activate             --> source \"$output/bin/activate\""
         echo "$____" "    *  deactivate           --> source deactivate"
         echo "$____"
         echo "$____" "  If in 'envs' folder:"
-        echo "$____" "    *  activate             --> conda activate $name"
+        echo "$____" "    *  activate             --> conda activate \"$name\""
         echo "$____" "    *  deactivate           --> conda deactivate"
     else
         echo "$info" "Complete! Environment is now packaged at '$output'"
         echo "$help" "[Instructions]"
         echo "$____"
         echo "$____" "  Initial Setup:"
-        echo "$____" "    1. untar archive        --> tar -xf $output_file"
-        echo "$____" "    2. activate environment --> source $name/bin/activate"
+        echo "$____" "    1. untar archive        --> tar -xf \"$output_file\""
+        echo "$____" "    2. activate environment --> source \"$name/bin/activate\""
         echo "$____" "    3. fix path prefixes    --> conda-unpack"
         echo "$____"
         echo "$____" "  Normal Use:"
-        echo "$____" "    *  activate             --> source $name/bin/activate"
+        echo "$____" "    *  activate             --> source \"$name/bin/activate\""
         echo "$____" "    *  deactivate           --> source deactivate"
     fi
     echo     "$____"
     echo     "$____" "  Info:"
-    echo     "$____" "    *  conda dependencies     @ $name/$dep_name/$dep_file"
+    echo     "$____" "    *  conda dependencies     @ '$name/$dep_name/$dep_file'"
     echo     "$____" "    *  poetry lockfile        @ $poetry_lockfile"
 }
 
@@ -451,17 +451,17 @@ if [[ ${#pip_files[@]} -gt 0 ]]; then
         conda_env_update
     done
 
-    # EXIT target environment and setup pip to only use local wheels
-    conda deactivate
-    set_pip_local_install
-
     echo "$info" "Complete!"
 
     # revert logging back to default settings
     set_logging "$default_tag"
 fi
 
+# EXIT target environment
+conda deactivate
+
 remove_old_env
+set_pip_local_install
 unset compilers_installed
 
 # create and ENTER target environment
@@ -531,7 +531,7 @@ uninstall_cross_compilers  # <-- uninstall cross-compilers, but keep libraries
 # export environment to .yml file
 unset PIP_QUIET  # <-- only for conda env export
 echo "$info" "exporting pinned dependencies to '$dep_file'..."
-conda env export | grep -v "^prefix: " | grep -v "^$" > "$dep_dir/$dep_file"
+conda-env export | grep -v "^prefix: " | grep -v "^$" > "$dep_dir/$dep_file"
 
 # run conda-pack to package the environment (or create)
 if [[ $create ]]; then

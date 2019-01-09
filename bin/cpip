@@ -110,18 +110,18 @@ conda_env_create()
 conda_env_update()
 {
     echo "$info" "updating environment with '$file' file..."
-    conda env update -n "$env" -f "$file" $quiet $log_quiet
+    conda-env update -n "$env" -f "$file" $quiet $log_quiet
 }
 
 conda_env_remove()
 {
     echo "$info" "removing environment..."
-    conda env remove -n "$env" --yes $quiet $log_quiet
+    conda-env remove -n "$env" --yes $quiet $log_quiet
 }
 
 remove_old_env()
 {
-    if [[ $(conda env list | grep "^$env " | wc -l) -gt 0 ]]; then
+    if [[ $(conda-env list | grep "^$env " | wc -l) -gt 0 ]]; then
         echo "$info" "found old environment, removing..."
         conda_env_remove
     fi

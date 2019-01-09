@@ -45,17 +45,17 @@ For more information: `cpip pack --help` or `cpip create --help`
 
 #### 4) Unpack and Activate
     Initial Setup (if using 'cpip pack'):
-      1. untar archive        --> tar -xf <archive>
-      2. activate environment --> source <env-root>/bin/activate
+      1. untar archive        --> tar -xf "<archive>"
+      2. activate environment --> source "<env-root>/bin/activate"
       3. fix path prefixes    --> conda-unpack
     
     Normal Use:
-      *  activate             --> source <env-root>/bin/activate
+      *  activate             --> source "<env-root>/bin/activate"
       *  deactivate           --> source deactivate
 
     Info:
-      *  conda dependencies     @ <env-root>/dependencies/<env-name>.yml
-      *  poetry lockfile        @ <env-root>/dependencies/poetry.lock
+      *  conda dependencies     @ '<env-root>/dependencies/<env-name>.yml'
+      *  poetry lockfile        @ '<env-root>/dependencies/poetry.lock'
 
 **NOTE:** It's possible to change the path of `<env-root>` after
 untarring, as long that is done prior to running `conda-unpack`.
