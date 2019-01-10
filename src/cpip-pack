@@ -300,6 +300,11 @@ while [[ $# -gt 0 ]]; do
             shift # past value
             ;;
         -v|--version)
+            if [[ $create ]]; then
+                >&2 echo "$error" "'$1' not a recognized option"
+                >&2 usage
+                exit 1
+            fi
             [[ $version ]] && opt_twice_err "--version"
             [[ -z $2 ]] && missing_val_err "--version"
             version="$2"
