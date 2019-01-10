@@ -88,8 +88,9 @@ detected, or the `--post-setup` option is used.
 
 **NOTE:** If any Anaconda compiler tools
 (see [here](https://conda.io/docs/user-guide/tasks/build-packages/compiler-tools.html))
-or associated libraries are present in the environment file, they will all be removed.
-Only the libraries will be reinstalled, potentially of different versions than before.
+or associated runtime libraries are present in the environment file(s), they will be
+removed completely. Only the compiler runtime libraries will be reinstalled,
+and potentially of different versions than before.
 
 #### Order of Environments
 This tool can take more than one `conda` environment file.
