@@ -270,6 +270,13 @@ opt_twice_err()
     exit 1
 }
 
+opt_invalid_err()
+{
+    >&2 echo "$error" "'$1' not a recognized option"
+    >&2 usage
+    exit 1
+}
+
 missing_val_err()
 {
     >&2 echo "$error" "'$1' option requires a value"
@@ -300,11 +307,7 @@ while [[ $# -gt 0 ]]; do
             shift # past value
             ;;
         -v|--version)
-            if [[ $create ]]; then
-                >&2 echo "$error" "'$1' not a recognized option"
-                >&2 usage
-                exit 1
-            fi
+            [[ $create ]] && opt_invalid_err "$1"
             [[ $version ]] && opt_twice_err "--version"
             [[ -z $2 ]] && missing_val_err "--version"
             version="$2"
@@ -353,9 +356,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            >&2 echo "$error" "'$1' not a recognized option"
-            >&2 usage
-            exit 1
+            opt_invalid_err "$1"
             ;;
     esac
 done
