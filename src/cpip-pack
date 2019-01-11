@@ -51,11 +51,13 @@ install_cross_compilers()
 {
     if [[ -z $compilers_installed ]]; then
         if [[ $compiler_pkgs ]]; then 
-            echo "$info" "uninstalling interfering cross-compiler packages..."
             local current_pkgs="$(conda list --json | jq '[.[].name]')"
             local missing_pkgs="$(jq_diff "$compiler_pkgs" "$current_pkgs")"
             local interfering_pkgs="$(jq_diff "$compiler_pkgs" "$missing_pkgs" | jq -r '.[]')"
-            conda uninstall ${interfering_pkgs[@]} --force --yes $quiet $log_quiet
+            if [[ $interfering_pkgs ]]; then
+                echo "$warning" "found interfering cross-compiler packages in the environment, uninstalling..."
+                conda uninstall ${interfering_pkgs[@]} --force --yes $quiet $log_quiet
+            fi
         fi
 
         # install cross compilers
