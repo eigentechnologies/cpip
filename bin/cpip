@@ -131,16 +131,19 @@ conda_env_update()
 
 conda_env_remove()
 {
-    echo "$info" "removing environment..."
     conda-env remove -n "$env" --yes $quiet $log_quiet
 }
 
 remove_old_env()
 {
-    if [[ $(conda-env list --json | jq -r '.envs | .[]' | grep -x "$CONDA_PREFIX/envs/$env" | wc -l) -gt 0 ]]; then
+    local env_path="$CONDA_PREFIX/envs/$env"
+    if [[ $(conda-env list --json | jq -r '.envs | .[]' | grep -x "$env_path" | wc -l) -gt 0 ]]; then
         echo "$info" "found old environment, removing..."
         conda_env_remove
     fi
+
+    # remove environment manually in case conda couldn't find it
+    rm -rf "$env_path"
 }
 
 set_pip_cache_dir()
