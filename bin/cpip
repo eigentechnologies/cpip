@@ -137,7 +137,7 @@ conda_env_remove()
 
 remove_old_env()
 {
-    if [[ $(conda-env list | grep "^$env " | wc -l) -gt 0 ]]; then
+    if [[ $(conda-env list --json | jq -r '.envs | .[]' | grep -x "$CONDA_PREFIX/envs/$env" | wc -l) -gt 0 ]]; then
         echo "$info" "found old environment, removing..."
         conda_env_remove
     fi
