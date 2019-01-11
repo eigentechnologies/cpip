@@ -31,6 +31,7 @@ given `conda` environment files
 ## Environment Dependencies
 - [conda-pack](https://conda.github.io/conda-pack/) (installed via `conda`)
 - [jq](https://stedolan.github.io/jq/) (installed via `conda`)
+- [python](https://www.python.org/) (installed via `conda`)
 
 ## Usage
 

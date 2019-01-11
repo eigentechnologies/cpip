@@ -403,7 +403,7 @@ if [[ ! -d $output_dir ]]; then
 fi
 
 # set other output variables
-output_dir="$(readlink -e "$output_dir")"  # <-- set to absolute path
+output_dir="$(py_realpath "$output_dir")"  # <-- set to absolute path
 if [[ $create ]]; then 
     output="$output_dir/$name"
 else
@@ -509,7 +509,7 @@ if [[ $poetry_dir ]]; then
     # change logging for poetry_install
     set_logging "$default_tag $poetry_install"
    
-    poetry_dir="$(readlink -e "$poetry_dir")"  # <-- set to absolute path
+    poetry_dir="$(py_realpath "$poetry_dir")"  # <-- set to absolute path
     unset_pip_local_install
     install_pip
     install_cross_compilers

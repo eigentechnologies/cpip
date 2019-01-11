@@ -6,3 +6,4 @@ dependencies:
 - conda>=4.4
 - conda-pack
 - jq
+- python>=3.5

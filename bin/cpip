@@ -148,6 +148,11 @@ set_pip_cache_dir()
     export PIP_CACHE_DIR="$CONDA_PREFIX/pip/cache"
 }
 
+py_realpath()
+{
+    python -c "import os; print(os.path.realpath(\"$1\"))"
+}
+
 err_trap()
 {
     # this function must be used at the beginning of the exit trap
