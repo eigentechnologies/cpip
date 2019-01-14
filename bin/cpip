@@ -115,6 +115,7 @@ env="cpip_env"
 conda_initiate()
 {
     source "$CONDA_PREFIX/etc/profile.d/conda.sh"
+    conda activate
 }
 
 conda_env_create()
