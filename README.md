@@ -99,14 +99,6 @@ These files will be loaded in the order they are given on
 the command line. Different command line orders may produce
 slightly different environments.
 
-#### Concurrency
-Multiple `cpip` processes can be run concurrently if we do the following:
-
-- if not using a `poetry` lockfile, use seperate `poetry` project directories
-- create a build environment for each process, i.e. for process `X`
-    1. `conda env create -n cpip-X -f cpip.yml`
-    1. `conda env activate cpip-X`
-
 ##### TODO: Non-Unix Systems
 For systems that don't respect the `XDG_CACHE_HOME` environment variable,
 Poetry may have concurrency issues, however, if using a `poetry.lock` file,
