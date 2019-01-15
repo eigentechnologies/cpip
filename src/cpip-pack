@@ -435,7 +435,7 @@ if [[ -z $force ]]; then
 fi
 
 # exit as soon as a command fails and print error
-trap err_trap  ERR SIGINT SIGTERM SIGKILL
+trap err_trap  ERR SIGHUP SIGINT SIGQUIT SIGTERM
 trap exit_trap EXIT
 
 conda_initiate

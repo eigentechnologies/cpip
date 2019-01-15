@@ -88,7 +88,7 @@ if [[ $arg_count -eq 0 ]]; then
 fi
 
 # exit as soon as a command fails and print error
-trap err_trap ERR SIGINT SIGTERM SIGKILL
+trap err_trap  ERR SIGHUP SIGINT SIGQUIT SIGTERM
 
 conda_initiate
 remove_old_env
