@@ -35,16 +35,16 @@ given `conda` environment files
 
 ## Usage
 
-#### 1) Create Build Environment
+### 1) Create Build Environment
 `conda env create -f cpip.yml`
 
-#### 2) Activate Build Environment
+### 2) Activate Build Environment
 `conda activate cpip`
 
-#### 3) Run 'cpip pack' or 'cpip create'
+### 3) Run 'cpip pack' or 'cpip create'
 For more information: `cpip pack --help` or `cpip create --help`
 
-#### 4) Unpack and Activate
+### 4) Unpack and Activate
     Initial Setup (if using 'cpip pack'):
       1. untar archive        --> tar -xf <archive>
       2. activate environment --> source <env-root>/bin/activate
@@ -66,16 +66,16 @@ Use `cpip clean` command to clean the conda and/or pip caches
 
 ## Other Things to Note
 
-#### Conda Configuration
+### Conda Configuration
 The only change made to the configuration is that `defaults`
 is removed from the `channels` key in order to enforce better
 consistency. Changing other settings may yield unexpected results.
 
-#### Poetry Configuration
+### Poetry Configuration
 `cpip pack` internally sets `settings.virtualenvs.create` to `false`,
 but restores the setting to its original value upon failure.
 
-#### Installing pip dependencies with Conda vs. Poetry
+### Installing pip dependencies with Conda vs. Poetry
 `pip` dependencies can be installed via `conda` or `poetry`.
 It is recommended to use a `poetry` project to define all the `pip`
 packages in your project; this allows for lockfiles to pin package
@@ -83,7 +83,7 @@ versions properly. If you decide to use `poetry`, it makes sense to
 move ALL `pip` dependencies from the `conda` environment `.yml` files
 to a `poetry` project `.toml` file.
 
-#### Cross-Compilers
+### Cross-Compilers
 Cross-compilers will be installed for if any `pip` dependencies are
 detected, or the `--post-setup` option is used.
 
@@ -93,13 +93,16 @@ or associated runtime libraries are present in the environment file(s), they wil
 removed completely. Only the compiler runtime libraries will be reinstalled,
 and potentially of different versions than before.
 
-#### Order of Environments
+### Order of Environments
 This tool can take more than one `conda` environment file.
 These files will be loaded in the order they are given on
 the command line. Different command line orders may produce
 slightly different environments.
 
-##### TODO: Non-Unix Systems
+### Concurrency
+Running more than one `cpip` command simultaneously is not supported.
+
+### TODO: Non-Unix Systems
 For systems that don't respect the `XDG_CACHE_HOME` environment variable,
 Poetry may have concurrency issues, however, if using a `poetry.lock` file,
 this will relieve any potential cache conflicts.
