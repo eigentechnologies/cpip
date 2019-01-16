@@ -173,11 +173,9 @@ remove_temp()
 run_post_setup()
 {
     if [[ $post_setup ]]; then
-        local current_env="$CONDA_DEFAULT_ENV"
-        echo "$info" "running post-setup script..."
-        conda deactivate
-        bash "$src_dir/launch" "$env" "$post_setup"
-        conda activate "$current_env"
+        post_setup="$(py_realpath "$post_setup")"
+        echo "$info" "running post-setup executable '$post_setup'..."
+        $post_setup
     fi
 }
 
@@ -235,7 +233,7 @@ usage()
     else
         echo "$____" "       $___________ [--poetry DIR] [--version VERSION] [--output DIR]"
     fi
-    echo     "$____" "       $___________ [--post-setup SCRIPT] [--no-dev] [--unlock]"
+    echo     "$____" "       $___________ [--post-setup EXE] [--no-dev] [--unlock]"
     echo     "$____" "       $___________ [--force] [--color] [--no-color] [--quiet]"
     echo     "$____" "       $___________ [--help]"
 }
@@ -271,7 +269,7 @@ advanced_usage()
     echo     "$____" "  --output, -o DIR          Directory where the final $output will go."
     echo     "$____" "                            Otherwise, $output will be ouputed to the current"
     echo     "$____" "                            working directory."
-    echo     "$____" "  --post-setup SCRIPT       Script to run after the environment is setup."
+    echo     "$____" "  --post-setup EXE          Executable to run after the environment is setup."
     echo     "$____" "  --no-dev                  Do not install dev dependencies for Poetry."
     echo     "$____" "  --unlock                  Update Poetry dependencies and overwrite lockfile."
     echo     "$____" "  --force                   Overwrite any existing $output at the output path."

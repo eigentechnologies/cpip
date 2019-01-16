@@ -1,8 +1,0 @@
-#!/bin/bash
-
-# arg $1 = environment name 
-# arg $2 = script path 
-
-source "$CONDA_PREFIX/etc/profile.d/conda.sh"
-conda activate "$1"
-source "$2"
