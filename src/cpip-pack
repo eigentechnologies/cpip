@@ -170,13 +170,12 @@ remove_temp()
     fi
 }
 
-run_post_setup()
+run_commands()
 {
-    if [[ $post_setup ]]; then
-        post_setup="$(py_realpath "$post_setup")"
-        echo "$info" "running post-setup executable '$post_setup'..."
-        $post_setup
-    fi
+    for cmd in "${commands[@]}"; do
+        echo "$info" "running command '$cmd'..."
+        eval "$cmd"
+    done
 }
 
 exit_trap()
@@ -228,13 +227,13 @@ usage()
 {
     # NOTE: if you update this print message, please update README.md
     echo     "$help" "usage: $script_name --name PROJECT [--file FILE]..."
-    if [[ $create ]]; then
-        echo "$____" "       $___________ [--poetry DIR] [--output DIR]"
-    else
-        echo "$____" "       $___________ [--poetry DIR] [--version VERSION] [--output DIR]"
+    echo     "$____" "       $___________ [--poetry DIR] [--output DIR]"
+    echo     "$____" "       $___________ [--command COMMAND]..."
+    if [[ -z $create ]]; then
+        echo "$____" "       $___________ [--version VERSION]"
     fi
-    echo     "$____" "       $___________ [--post-setup EXE] [--no-dev] [--unlock]"
-    echo     "$____" "       $___________ [--force] [--color] [--no-color] [--quiet]"
+    echo     "$____" "       $___________ [--no-dev] [--unlock] [--force]"
+    echo     "$____" "       $___________ [--color] [--no-color] [--quiet]"
     echo     "$____" "       $___________ [--help]"
 }
 
@@ -263,19 +262,22 @@ advanced_usage()
     echo     "$____" "                            environment will be updated in the order that they"
     echo     "$____" "                            are given on the command line."
     echo     "$____" "  --poetry, -p DIR          Poetry project directory."
-    if [[ -z $create ]]; then
-        echo "$____" "  --version, -v VERSION     Version number to be included in output $output."
-    fi
     echo     "$____" "  --output, -o DIR          Directory where the final $output will go."
     echo     "$____" "                            Otherwise, $output will be ouputed to the current"
     echo     "$____" "                            working directory."
-    echo     "$____" "  --post-setup EXE          Executable to run after the environment is setup."
+    echo     "$____" "  --command, -c COMMAND     Command to run after the environment is setup."
+    echo     "$____" "                            This option can be used multiple times to specify"
+    echo     "$____" "                            multiple commands to run. They will be ran in the"
+    echo     "$____" "                            order that they are given on the command line."
+    if [[ -z $create ]]; then
+        echo "$____" "  --version, -v VERSION     Version number to be included in output $output."
+    fi
     echo     "$____" "  --no-dev                  Do not install dev dependencies for Poetry."
     echo     "$____" "  --unlock                  Update Poetry dependencies and overwrite lockfile."
     echo     "$____" "  --force                   Overwrite any existing $output at the output path."
     echo     "$____" "  --color                   Force colored output."
     echo     "$____" "  --no-color                Disable colored output."
-    echo     "$____" "  --quiet, -q               Suppress output for commands."
+    echo     "$____" "  --quiet, -q               Suppress output for subprocesses."
     echo     "$____" "  --help, -h                Show this help message then exit."
 }
 
@@ -300,6 +302,7 @@ missing_val_err()
     exit 1
 }
 
+commands=()
 files=()
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -311,6 +314,7 @@ while [[ $# -gt 0 ]]; do
             shift # past value
             ;;
         -f|--file)
+            [[ -z $2 ]] && missing_val_err "--file"
             files+=("$2")
             shift # past argument
             shift # past value
@@ -337,10 +341,9 @@ while [[ $# -gt 0 ]]; do
             shift # past argument
             shift # past value
             ;;
-        --post-setup)
-            [[ $post_setup ]] && opt_twice_err "--post-setup"
-            [[ -z $2 ]] && missing_val_err "--post-setup"
-            post_setup="$2"
+        -c|--command)
+            [[ -z $2 ]] && missing_val_err "--command"
+            commands+=("$2")
             shift # past argument
             shift # past value
             ;;
@@ -385,7 +388,7 @@ if [[ -z $name ]]; then
 fi
 
 # make sure environment files exist
-for file in ${files[@]}; do
+for file in "${files[@]}"; do
     if [[ ! -f $file ]]; then
         >&2 echo "$error" "'$file' is either not a file or it doesn't exist"
         >&2 usage
@@ -445,7 +448,7 @@ echo "$info" "using pip cache directory '$PIP_CACHE_DIR'"
 pip_files=()
 
 # scan for pip dependencies
-for file in ${files[@]}; do
+for file in "${files[@]}"; do
     # warn user for pip dependencies
     if [[ $(cat "$file" | egrep "^\s*-\s+pip:\s*$" | wc -l) -gt 0 ]]; then
         >&2 echo "$warning" "found pip dependencies in '$file'; this is not recommended!"
@@ -469,7 +472,7 @@ if [[ ${#pip_files[@]} -gt 0 ]]; then
     set_logging "$default_tag $pip_install"
 
     # update the environment
-    for file in ${pip_files[@]}; do
+    for file in "${pip_files[@]}"; do
         conda_env_update
     done
 
@@ -490,7 +493,7 @@ unset compilers_installed
 create_and_activate
 
 # update the environment 
-for file in ${files[@]}; do
+for file in "${files[@]}"; do
     conda_env_update
 done
 
@@ -545,9 +548,9 @@ fi
 
 # for pip_install, we need to reinstall cross-compilers for the associated libraries
 [[ $pip_install ]] && install_cross_compilers
-# for post_setup, we need to use the same build environment we use for pip packages 
-[[ $post_setup ]] && install_cross_compilers
-run_post_setup
+# for running commands, we need to use the same build environment we use for pip packages
+[[ ${#commands[@]} -gt 0 ]] && install_cross_compilers
+run_commands
 uninstall_cross_compilers  # <-- uninstall cross-compilers, but keep libraries 
 
 # export environment to .yml file

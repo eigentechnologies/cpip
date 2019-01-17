@@ -62,7 +62,7 @@ For more information: `cpip pack --help` or `cpip create --help`
 untarring, as long that is done prior to running `conda-unpack`.
 
 ## Cleaning Caches
-Use `cpip clean` command to clean the conda and/or pip caches
+Use `cpip clean` command to clean the `conda` and/or `pip` caches
 
 ## Other Things to Note
 
@@ -85,13 +85,23 @@ to a `poetry` project `.toml` file.
 
 ### Cross-Compilers
 Cross-compilers will be installed for if any `pip` dependencies are
-detected, or the `--post-setup` option is used.
+detected, or the `--command` option is used. They will always be
+uninstalled automatically before the environment to create is finalized.
 
 **NOTE:** If any Anaconda compiler tools
 (see [here](https://conda.io/docs/user-guide/tasks/build-packages/compiler-tools.html))
 or associated runtime libraries are present in the environment file(s), they will be
 removed completely. Only the compiler runtime libraries will be reinstalled,
 and potentially of different versions than before.
+
+### Running Commands in the Newly Created Environment
+Immediately after the environment is created, it may be desired to run
+certain commands in the active environment. To do this, we can use the
+`--command` option to pass in commands that we want to run while the
+environment is active. `cpip` will ensure that cross-compilers are
+installed in the environment, so that the build environment for running
+commands is consistent with the build environment for compiling `pip`
+packages.
 
 ### Order of Environments
 This tool can take more than one `conda` environment file.
