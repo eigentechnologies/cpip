@@ -71,8 +71,8 @@ Use `cpip clean` command to clean the `conda` and/or `pip` caches
 It is recommended to use a `poetry` project to define all the `pip`
 packages in your project; this allows for lockfiles to pin package
 versions properly. If you decide to use `poetry`, it makes sense to
-move ALL `pip` dependencies from the `conda` environment `.yml` files
-to a `poetry` project `.toml` file.
+move ALL `pip` dependencies from the `conda` environment file(s) to
+a `poetry` project file.
 
 ### Cross-Compilers
 Cross-compilers will be installed if any `pip` dependencies are
