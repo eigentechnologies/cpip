@@ -50,7 +50,8 @@ jq_diff()
 install_cross_compilers()
 {
     if [[ -z $compilers_installed ]]; then
-        if [[ $compiler_pkgs ]]; then 
+        if [[ $compiler_pkgs ]]; then
+            # find interfering packages and remove them
             local current_pkgs="$(conda list --json | jq '[.[].name]')"
             local missing_pkgs="$(jq_diff "$compiler_pkgs" "$current_pkgs")"
             local interfering_pkgs="$(jq_diff "$compiler_pkgs" "$missing_pkgs" | jq -r '.[]')"
@@ -58,10 +59,13 @@ install_cross_compilers()
                 echo "$warning" "found interfering cross-compiler packages in the environment, uninstalling..."
                 conda uninstall ${interfering_pkgs[@]} --force --yes $quiet $log_quiet
             fi
+
+            echo "$info" "installing cross-compilers..."
+        else
+            echo "$info" "establishing cross-compiler packages..."
         fi
 
         # install cross compilers
-        echo "$info" "installing cross-compilers..."
         local pkgs=("$cc_pkg" "$cxx_pkg" "$gfortran_pkg")
         local pkg_diff="$(conda install --override-channels -c anaconda ${pkgs[@]} --no-update-deps --json --quiet)"
         local install_error="$(echo "$pkg_diff" | jq -r '.error')"
