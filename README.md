@@ -7,7 +7,7 @@ in a way that allows for cross-distro/cross-version compatibility.
 They are two ways to use `cpip`:
 
 - `cpip pack` will package the environment into a portable tarball.
-- `cpip create` will simply create a ready-to-use environement.
+- `cpip create` will simply create a ready-to-use environment.
 
 The advantage of having a `create` command gives the user the option
 to create the environment in the exact same way as the one that will
@@ -18,7 +18,7 @@ be deployed via the `pack` command.
 given `conda` environment files
 1. Installs cross-compilers and downloads/compiles `pip` packages
 1. Packages `conda` environment via `conda-pack` tool
-1. Unpacks environment to desired location (optional with `create` command)
+1. Unpacks environment to desired location (only for `create` command)
 
 ## Supported Operating Systems
 - Linux
