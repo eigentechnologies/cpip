@@ -3,7 +3,7 @@ channels:
 - anaconda
 - conda-forge
 dependencies:
-- conda>=4.4
+- conda>=4.5.11  # <-- reflect this requirement in the README
 - conda-pack
-- jq
+- jq==1.6
 - python>=3.5

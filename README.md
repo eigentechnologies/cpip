@@ -25,7 +25,7 @@ given `conda` environment files
 - macOS
 
 ## System Requirements
-- [conda](https://conda.io/docs/)
+- [conda (version 4.5.11 or higher)](https://conda.io/docs/)
 - [poetry](https://poetry.eustace.io/docs/) (optional)
 
 ## Environment Dependencies
