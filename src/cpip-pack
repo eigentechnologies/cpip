@@ -172,10 +172,15 @@ remove_temp()
 
 run_commands()
 {
+    index=1
     for cmd in "${commands[@]}"; do
-        echo "$info" "running command '$cmd'..."
-        eval "$cmd"
+        command_tag="${bold}[${blue}command ($index of ${#commands[@]})${reset}${bold}]${reset}"
+        set_logging "$default_tag $command_tag"
+        echo "$info" "running '$cmd'..."
+        (eval "$cmd")
+        ((++index))
     done
+    set_logging "$default_tag"
 }
 
 exit_trap()
