@@ -66,15 +66,6 @@ Use `cpip clean` command to clean the `conda` and/or `pip` caches
 
 ## Other Things to Note
 
-### Conda Configuration
-The only change made to the configuration is that `defaults`
-is removed from the `channels` key in order to enforce better
-consistency. Changing other settings may yield unexpected results.
-
-### Poetry Configuration
-`cpip pack` internally sets `settings.virtualenvs.create` to `false`,
-but restores the setting to its original value upon failure.
-
 ### Installing pip dependencies with Conda vs. Poetry
 `pip` dependencies can be installed via `conda` or `poetry`.
 It is recommended to use a `poetry` project to define all the `pip`
@@ -84,30 +75,44 @@ move ALL `pip` dependencies from the `conda` environment `.yml` files
 to a `poetry` project `.toml` file.
 
 ### Cross-Compilers
-Cross-compilers will be installed for if any `pip` dependencies are
+Cross-compilers will be installed if any `pip` dependencies are
 detected, or the `--command` option is used. They will always be
-uninstalled automatically before the environment to create is finalized.
+uninstalled automatically before the environment is finalized.
 
-**NOTE:** If any Anaconda compiler tools
+The cross-compilers used are Anaconda compiler tools.
 (see [here](https://conda.io/docs/user-guide/tasks/build-packages/compiler-tools.html))
-or associated runtime libraries are present in the environment file(s), they will be
-removed completely. Only the compiler runtime libraries will be reinstalled,
-and potentially of different versions than before.
+They are not true cross-compilers since they are not configured to work cross-platform.
+However, they are configured to give a high degree of compatibility from one
+distro/version to another.
+
+**NOTE:** If any Anaconda compiler tools or associated runtime libraries are
+present in the environment file(s), they will be removed completely. Only the
+compiler runtime libraries will be reinstalled, and potentially of different
+versions than before.
 
 ### Running Commands in the Newly Created Environment
 Immediately after the environment is created, it may be desired to run
 certain commands in the active environment. To do this, we can use the
-`--command` option to pass in commands that we want to run while the
-environment is active. `cpip` will ensure that cross-compilers are
-installed in the environment, so that the build environment for running
-commands is consistent with the build environment for compiling `pip`
-packages.
+`--command` option as many times as desired to pass in commands that we
+want to run while the environment is active. `cpip` will ensure that
+cross-compilers are installed in the environment, so that the build
+environment for running commands is consistent with the build environment
+for compiling `pip` packages.
 
 ### Order of Environments
 This tool can take more than one `conda` environment file.
 These files will be loaded in the order they are given on
 the command line. Different command line orders may produce
 slightly different environments.
+
+### Conda Configuration
+The only change made to the configuration is that `defaults`
+is removed from the `channels` key in order to enforce better
+consistency. Changing other settings may yield unexpected results.
+
+### Poetry Configuration
+`cpip pack` internally sets `settings.virtualenvs.create` to `false`,
+but restores the setting to its original value upon failure.
 
 ### Concurrency
 Running more than one `cpip` command simultaneously is not supported.
