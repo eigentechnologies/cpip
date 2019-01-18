@@ -25,7 +25,7 @@ given `conda` environment files
 - macOS
 
 ## System Requirements
-- [conda (version 4.5.11 or higher)](https://conda.io/docs/)
+- [conda](https://conda.io/docs/) (version 4.5.11 or higher)
 - [poetry](https://poetry.eustace.io/docs/) (optional)
 
 ## Environment Dependencies
@@ -79,8 +79,8 @@ Cross-compilers will be installed if any `pip` dependencies are
 detected, or the `--command` option is used. They will always be
 uninstalled automatically before the environment is finalized.
 
-The cross-compilers used are Anaconda compiler tools.
-(see [here](https://conda.io/docs/user-guide/tasks/build-packages/compiler-tools.html))
+The cross-compilers used are Anaconda compiler tools
+(see [here](https://conda.io/docs/user-guide/tasks/build-packages/compiler-tools.html)).
 They are not true cross-compilers since they are not configured to work cross-platform.
 However, they are configured to give a high degree of compatibility from one
 distro/version to another.
