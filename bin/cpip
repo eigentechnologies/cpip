@@ -118,6 +118,7 @@ conda_initiate()
         echo "$error" "cpip environment must be active! please run 'conda activate cpip' prior to use"
         exit 1
     fi
+    export CONDA_SHLVL=0
     source "$CONDA_PREFIX/etc/profile.d/conda.sh"
     conda activate
 }
