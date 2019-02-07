@@ -241,6 +241,7 @@ usage()
     if [[ -z $create ]]; then
         echo "$____" "       $___________ [--version VERSION]"
     fi
+    echo     "$____" "       $___________ [--build-tools]"
     echo     "$____" "       $___________ [--no-dev] [--unlock] [--force]"
     echo     "$____" "       $___________ [--color] [--no-color] [--quiet]"
     echo     "$____" "       $___________ [--help]"
@@ -281,6 +282,7 @@ advanced_usage()
     if [[ -z $create ]]; then
         echo "$____" "  --version, -v VERSION     Version number to be included in output $output."
     fi
+    echo     "$____" "  --build-tools             Install build tools into the final environment."
     echo     "$____" "  --no-dev                  Do not install dev dependencies for Poetry."
     echo     "$____" "  --unlock                  Update Poetry dependencies and overwrite lockfile."
     echo     "$____" "  --force                   Overwrite any existing $output at the output path."
@@ -335,14 +337,6 @@ while [[ $# -gt 0 ]]; do
             shift # past argument
             shift # past value
             ;;
-        -v|--version)
-            [[ $create ]] && opt_invalid_err "$1"
-            [[ $version ]] && opt_twice_err "--version"
-            [[ -z $2 ]] && missing_val_err "--version"
-            version="$2"
-            shift # past argument
-            shift # past value
-            ;;
         -o|--output)
             [[ $output_dir ]] && opt_twice_err "--output"
             [[ -z $2 ]] && missing_val_err "--output"
@@ -355,6 +349,18 @@ while [[ $# -gt 0 ]]; do
             commands+=("$2")
             shift # past argument
             shift # past value
+            ;;
+        -v|--version)
+            [[ $create ]] && opt_invalid_err "$1"
+            [[ $version ]] && opt_twice_err "--version"
+            [[ -z $2 ]] && missing_val_err "--version"
+            version="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        --build-tools)
+            build_tools=true
+            shift # past argument
             ;;
         --no-dev)
             no_dev="$1"
@@ -556,11 +562,11 @@ if [[ $poetry_dir ]]; then
 fi
 
 # for pip_install, we need to reinstall cross-compilers for the associated libraries
-[[ $pip_install ]] && install_cross_compilers
+[[ $pip_install || $build_tools ]] && install_cross_compilers
 # for running commands, we need to use the same build environment we use for pip packages
 [[ ${#commands[@]} -gt 0 ]] && install_cross_compilers
 run_commands
-uninstall_cross_compilers  # <-- uninstall cross-compilers, but keep libraries 
+[[ $build_tools ]] || uninstall_cross_compilers  # <-- uninstall cross-compilers, but keep libraries
 
 # export environment to .yml file
 unset PIP_QUIET  # <-- only for conda env export
