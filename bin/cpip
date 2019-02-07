@@ -94,7 +94,7 @@ set_logging()
 
 set_logging "$default_tag"
 
-# check os to find the right cross compilers
+# check os to find the right compilers
 if [[ $OSTYPE == "linux-gnu" ]]; then
     cc_pkg="gcc_linux-64"
     cxx_pkg="gxx_linux-64"

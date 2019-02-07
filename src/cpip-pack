@@ -47,7 +47,7 @@ jq_diff()
     echo "{\"add\": $add, \"sub\": $sub}" | jq '.add-.sub'
 }
 
-install_cross_compilers()
+install_compilers()
 {
     if [[ -z $compilers_installed ]]; then
         if [[ $compiler_pkgs ]]; then
@@ -56,16 +56,16 @@ install_cross_compilers()
             local missing_pkgs="$(jq_diff "$compiler_pkgs" "$current_pkgs")"
             local interfering_pkgs="$(jq_diff "$compiler_pkgs" "$missing_pkgs" | jq -r '.[]')"
             if [[ $interfering_pkgs ]]; then
-                echo "$warning" "found interfering cross-compiler packages in the environment, uninstalling..."
+                echo "$warning" "found interfering compiler packages in the environment, uninstalling..."
                 conda uninstall ${interfering_pkgs[@]} --force --yes $quiet $log_quiet
             fi
 
-            echo "$info" "installing cross-compilers..."
+            echo "$info" "installing compilers..."
         else
-            echo "$info" "establishing cross-compiler packages..."
+            echo "$info" "establishing compiler packages..."
         fi
 
-        # install cross compilers
+        # install compilers
         local pkgs=("$cc_pkg" "$cxx_pkg" "$gfortran_pkg")
         local pkg_diff="$(conda install --override-channels -c anaconda ${pkgs[@]} --no-update-deps --json --quiet)"
         local install_error="$(echo "$pkg_diff" | jq -r '.error')"
@@ -101,15 +101,15 @@ install_cross_compilers()
     fi
 }
 
-set_cross_compiler_pkgs()
+set_compiler_pkgs()
 {
     compiler_pkgs="$all_compiler_pkgs"
 }
 
-uninstall_cross_compilers()
+uninstall_compilers()
 {
     if [[ $compilers_installed ]] && [[ $tmp_pkgs ]]; then
-        echo "$info" "uninstalling cross-compilers..."
+        echo "$info" "uninstalling compilers..."
         conda uninstall ${tmp_pkgs[@]} --force --yes $quiet $log_quiet
         unset compilers_installed
     fi
@@ -475,9 +475,9 @@ done
 remove_old_env
 create_and_activate
 
-# set the full array of cross-compiler packages
-install_cross_compilers
-set_cross_compiler_pkgs
+# set the full array of compiler packages
+install_compilers
+set_compiler_pkgs
 
 if [[ ${#pip_files[@]} -gt 0 ]]; then
     pip_install="${bold}[${yellow}pip-install${reset}${bold}]${reset}"
@@ -530,7 +530,7 @@ if [[ $poetry_dir ]]; then
     poetry_dir="$(py_realpath "$poetry_dir")"  # <-- set to absolute path
     unset_pip_local_install
     install_pip
-    install_cross_compilers
+    install_compilers
     set_poetry_config
 
     # TODO: remove this when Poetry is more capable (see README)
@@ -561,12 +561,12 @@ if [[ $poetry_dir ]]; then
     set_logging "$default_tag"
 fi
 
-# for pip_install, we need to reinstall cross-compilers for the associated libraries
-[[ $pip_install || $build_tools ]] && install_cross_compilers
+# for pip_install, we need to reinstall compiler packages for the associated libraries
+[[ $pip_install || $build_tools ]] && install_compilers
 # for running commands, we need to use the same build environment we use for pip packages
-[[ ${#commands[@]} -gt 0 ]] && install_cross_compilers
+[[ ${#commands[@]} -gt 0 ]] && install_compilers
 run_commands
-[[ $build_tools ]] || uninstall_cross_compilers  # <-- uninstall cross-compilers, but keep libraries
+[[ $build_tools ]] || uninstall_compilers  # <-- uninstall compiler tools, but keep libraries
 
 # export environment to .yml file
 unset PIP_QUIET  # <-- only for conda env export
