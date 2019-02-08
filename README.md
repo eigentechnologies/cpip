@@ -112,7 +112,7 @@ consistency. Changing other settings may yield unexpected results.
 
 ### Poetry Configuration
 `cpip pack` internally sets `settings.virtualenvs.create` to `false`,
-but restores the setting to its original value upon failure.
+but restores the setting to its original value upon failure or completion.
 
 ### Concurrency
 Running more than one `cpip` command simultaneously is not supported.
