@@ -507,6 +507,12 @@ unset compilers_installed
 # create and ENTER target environment
 create_and_activate
 
+# install compiler packages all desired reasons
+[[ $pip_install ]] && install_compilers  # <-- for libraries
+[[ $poetry_install ]] && install_compilers  # <-- for building pip packages
+[[ $build_tools ]] && install_compilers  # <-- for '--build-tools' option
+[[ ${#commands[@]} -gt 0 ]] && install_compilers  # <-- for build environment to run commands
+
 # update the environment 
 for file in "${files[@]}"; do
     conda_env_update
@@ -530,7 +536,6 @@ if [[ $poetry_dir ]]; then
     poetry_dir="$(py_realpath "$poetry_dir")"  # <-- set to absolute path
     unset_pip_local_install
     install_pip
-    install_compilers
     set_poetry_config
 
     # TODO: remove this when Poetry is more capable (see README)
@@ -561,10 +566,6 @@ if [[ $poetry_dir ]]; then
     set_logging "$default_tag"
 fi
 
-# for pip_install, we need to reinstall compiler packages for the associated libraries
-[[ $pip_install || $build_tools ]] && install_compilers
-# for running commands, we need to use the same build environment we use for pip packages
-[[ ${#commands[@]} -gt 0 ]] && install_compilers
 run_commands
 [[ $build_tools ]] || uninstall_compilers  # <-- uninstall compiler tools, but keep libraries
 
