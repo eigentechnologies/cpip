@@ -540,11 +540,8 @@ if [[ $poetry_dir ]]; then
     # install pip packages
     echo "$info" "installing pip packages via Poetry..."
     cd "$poetry_dir"
-    if [[ $unlock ]]; then
-        poetry update $no_dev $quiet $ansi $no_ansi
-    else
-        poetry install $no_dev $quiet $ansi $no_ansi
-    fi
+    [[ $unlock ]] && poetry update --lock $no_dev $quiet $ansi $no_ansi
+    poetry install $no_dev $quiet $ansi $no_ansi
     cp "$poetry_lock" "$dep_dir"
     cd -
 
