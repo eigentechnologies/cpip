@@ -115,7 +115,7 @@ env="cpip_env"
 conda_initiate()
 {
     if [[ $CONDA_DEFAULT_ENV != "cpip" ]]; then
-        echo "$error" "cpip environment must be active! please run 'conda activate cpip' prior to use"
+        >&2 echo "$error" "cpip environment must be active! please run 'conda activate cpip' prior to use"
         exit 1
     fi
     export CONDA_SHLVL=0
