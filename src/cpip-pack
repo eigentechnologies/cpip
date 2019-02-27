@@ -201,7 +201,6 @@ complete_msg()
         local poetry_lockfile="NOT_APPLICABLE"
     fi
 
-    # NOTE: if you update this print message, please update README.md
     if [[ $create ]]; then
         echo "$info" "Complete! Environment is now installed in '$output'"
         echo "$help" "[Instructions]"
@@ -234,7 +233,6 @@ complete_msg()
 
 usage()
 {
-    # NOTE: if you update this print message, please update README.md
     echo     "$help" "usage: $script_name --name PROJECT [--file FILE]..."
     echo     "$____" "       $___________ [--poetry DIR] [--output DIR]"
     echo     "$____" "       $___________ [--command COMMAND]..."

@@ -164,7 +164,6 @@ py_realpath()
 
 err_trap()
 {
-    # this function must be used at the beginning of the exit trap
     local lc="$BASH_COMMAND" rc=$?
     if [[ $rc -ne 0 ]]; then
         >&2 echo "$error" "Command [${red}$lc${reset}] failed with exit code [${red}$rc${reset}]"
@@ -174,7 +173,6 @@ err_trap()
 
 usage()
 {
-    # NOTE: if you update this print message, please update README.md
     echo "$help" "usage: $script_name <command> [options]"
     echo "$____"
     echo "$____" "Portable packaging for conda + pip environments"

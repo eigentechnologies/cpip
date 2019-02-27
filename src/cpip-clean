@@ -18,7 +18,6 @@
 
 usage()
 {
-    # NOTE: if you update this print message, please update README.md
     echo "$help" "usage: $script_name <arguments> [options]"
     echo "$____"
     echo "$____" "arguments: (at least one is required)"
