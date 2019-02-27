@@ -176,18 +176,18 @@ usage()
 {
     # NOTE: if you update this print message, please update README.md
     echo "$help" "usage: $script_name <command> [options]"
-    echo "$s___"
-    echo "$s___" "Portable packaging for conda + pip environments"
-    echo "$s___"
-    echo "$s___" "commands:"
-    echo "$s___" "  pack                      Package environment into a tarball."
-    echo "$s___" "  create                    Create conda environment."
-    echo "$s___" "  clean                     Cleanup conda and/or pip cache."
-    echo "$s___"
-    echo "$s___" "options:"
-    echo "$s___" "  --color                   Force colored output."
-    echo "$s___" "  --no-color                Disable colored output."
-    echo "$s___" "  --help, -h                Show this help message then exit."
+    echo "$____"
+    echo "$____" "Portable packaging for conda + pip environments"
+    echo "$____"
+    echo "$____" "commands:"
+    echo "$____" "  pack                      Package environment into a tarball."
+    echo "$____" "  create                    Create conda environment."
+    echo "$____" "  clean                     Cleanup conda and/or pip cache."
+    echo "$____"
+    echo "$____" "options:"
+    echo "$____" "  --color                   Force colored output."
+    echo "$____" "  --no-color                Disable colored output."
+    echo "$____" "  --help, -h                Show this help message then exit."
 }
 
 if [[ $# -le $min_args ]]; then
