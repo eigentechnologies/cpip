@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 #   cpip -- portable packaging for conda + pip environments
 #   Copyright (C) 2018  Alden Goldstein, Eigen Technologies
