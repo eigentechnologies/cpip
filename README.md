@@ -99,6 +99,10 @@ cross-compilers are installed in the environment, so that the build
 environment for running commands is consistent with the build environment
 for compiling `pip` packages.
 
+Internal Environment Variables Exposed to Commands:
+- `CPIP_CONDA_LOCKFILE`   <-- path to conda lockfile
+- `CPIP_POETRY_LOCKFILE`  <-- path to poetry lockfile
+
 ### Order of Environments
 This tool can take more than one `conda` environment file.
 These files will be loaded in the order they are given on

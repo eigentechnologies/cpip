@@ -41,6 +41,16 @@ set_compiler_env()
     fi
 }
 
+unset_compiler_env()
+{
+    # refresh current environment
+    local current_env="$CONDA_DEFAULT_ENV"
+    conda deactivate
+    conda activate "$current_env"
+
+    unset LDSHARED
+}
+
 jq_diff()
 {
     local add="$1" sub="$2"
@@ -112,6 +122,21 @@ uninstall_compilers()
         echo "$info" "uninstalling compilers..."
         conda uninstall ${tmp_pkgs[@]} --force --yes $quiet $log_quiet
         unset compilers_installed
+        unset_compiler_env
+    fi
+}
+
+pip_quiet_save()
+{
+    [[ $PIP_QUIET ]] && pip_quiet="$PIP_QUIET"
+    export PIP_QUIET=1
+}
+
+pip_quiet_restore()
+{
+    if [[ $pip_quiet ]]; then
+        export PIP_QUIET="$pip_quiet"
+        unset "$pip_quiet"
     fi
 }
 
@@ -122,19 +147,15 @@ set_pip_local_install()
     export PIP_FIND_LINKS="$(find "$PIP_CACHE_DIR/wheels" -name *.whl)"
 
     # turn off pip verbosity since the messages will be redundant
-    [[ $PIP_QUIET ]] && pip_quiet="$PIP_QUIET"
-    export PIP_QUIET=1
+    pip_quiet_save
+    unset PIP_QUIET
 }
 
 unset_pip_local_install()
 {
     unset PIP_ONLY_BINARY
     unset PIP_FIND_LINKS
-
-    # restore PIP_QUIET
-    if [[ $pip_quiet ]]; then
-        export PIP_QUIET="$pip_quiet"
-    fi
+    pip_quiet_restore
 }
 
 install_pip()
@@ -156,6 +177,26 @@ restore_poetry_config()
     if [[ $venvs_create ]]; then
         poetry config settings.virtualenvs.create "$venvs_create"
         unset venvs_create
+    fi
+}
+
+save_poetry_lockfile()
+{
+    if [[ $poetry_dir ]]; then
+        cd "$poetry_dir"
+        poetry_lock_backup="$poetry_lock.bak"
+        cp "$poetry_lock" "$poetry_lock_backup"
+        cd -
+    fi
+}
+
+restore_poetry_lockfile()
+{
+    if [[ $poetry_lock_backup ]]; then
+        cd "$poetry_dir"
+        mv "$poetry_lock_backup" "$poetry_lock"
+        unset poetry_lock_backup
+        cd -
     fi
 }
 
@@ -190,6 +231,7 @@ run_commands()
 exit_trap()
 {
     restore_poetry_config
+    restore_poetry_lockfile
     remove_temp
 }
 
@@ -227,7 +269,7 @@ complete_msg()
     fi
     echo     "$____"
     echo     "$____" "  Info:"
-    echo     "$____" "    *  conda dependencies     @ '$name/$dep_name/$dep_file'"
+    echo     "$____" "    *  conda lockfile         @ '$name/$dep_name/$dep_file'"
     echo     "$____" "    *  poetry lockfile        @ $poetry_lockfile"
 }
 
@@ -282,7 +324,7 @@ advanced_usage()
     fi
     echo     "$____" "  --build-tools             Install build tools into the final environment."
     echo     "$____" "  --no-dev                  Do not install dev dependencies for Poetry."
-    echo     "$____" "  --unlock                  Update Poetry dependencies and overwrite lockfile."
+    echo     "$____" "  --unlock                  Update Poetry dependencies and ignore lockfile."
     echo     "$____" "  --force                   Overwrite any existing $output at the output path."
     echo     "$____" "  --color                   Force colored output."
     echo     "$____" "  --no-color                Disable colored output."
@@ -510,12 +552,24 @@ for file in "${files[@]}"; do
     conda_env_update
 done
 
+[[ $poetry_dir ]] && install_pip
+[[ $build_tools ]] && install_compilers
+
 # setup dependencies info output
 dep_name="dependencies"
 dep_dir="$CONDA_PREFIX/$dep_name"
 dep_file="$name.yml"
 poetry_lock="poetry.lock"
 mkdir -p "$dep_dir"
+
+export CPIP_CONDA_LOCKFILE="$dep_dir/$dep_file"  # <-- expose to custom commands
+
+# export environment to .yml file
+pip_quiet_save
+unset PIP_QUIET  # <-- only for conda env export
+echo "$info" "exporting pinned dependencies to '$dep_file'..."
+conda-env export | grep -v "^prefix: " | grep -v "^$" > "$CPIP_CONDA_LOCKFILE"
+pip_quiet_restore
 
 # install pip packages in target environment
 if [[ $poetry_dir ]]; then
@@ -527,7 +581,6 @@ if [[ $poetry_dir ]]; then
    
     poetry_dir="$(py_realpath "$poetry_dir")"  # <-- set to absolute path
     unset_pip_local_install
-    install_pip
     install_compilers
     set_poetry_config
 
@@ -538,9 +591,12 @@ if [[ $poetry_dir ]]; then
     # install pip packages
     echo "$info" "installing pip packages via Poetry..."
     cd "$poetry_dir"
+    save_poetry_lockfile
     [[ $unlock ]] && poetry update --lock $no_dev $quiet $ansi $no_ansi
     poetry install $no_dev $quiet $ansi $no_ansi
     cp "$poetry_lock" "$dep_dir"
+    export CPIP_POETRY_LOCKFILE="$dep_dir/$poetry_lock"  # <-- expose to custom commands
+    restore_poetry_lockfile
     cd -
 
     restore_poetry_config
@@ -557,16 +613,11 @@ if [[ $poetry_dir ]]; then
 fi
 
 # for pip_install, we need to reinstall compiler packages for the associated libraries
-[[ $pip_install || $build_tools ]] && install_compilers
+[[ $pip_install ]] && install_compilers
 # for running commands, we need to use the same build environment we use for pip packages
 [[ ${#commands[@]} -gt 0 ]] && install_compilers
 run_commands
 [[ $build_tools ]] || uninstall_compilers  # <-- uninstall compiler tools, but keep libraries
-
-# export environment to .yml file
-unset PIP_QUIET  # <-- only for conda env export
-echo "$info" "exporting pinned dependencies to '$dep_file'..."
-conda-env export | grep -v "^prefix: " | grep -v "^$" > "$dep_dir/$dep_file"
 
 # run conda-pack to package the environment (or create)
 if [[ $create ]]; then
