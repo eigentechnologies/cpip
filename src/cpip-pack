@@ -128,10 +128,9 @@ uninstall_compilers()
 
 conditional_install_compilers()
 {
-    [[ $build_tools ]] && install_compilers
-    [[ $pip_install ]] && install_compilers
-    [[ $poetry_dir ]] && install_compilers
-    [[ ${#commands[@]} -gt 0 ]] && install_compilers
+    if [[ $build_tools ]] || [[ $pip_install ]] || [[ $poetry_dir ]] || [[ ${#commands[@]} -gt 0 ]]; then
+        install_compilers
+    fi
 }
 
 conditional_uninstall_compilers()
@@ -585,7 +584,7 @@ export CPIP_CONDA_LOCKFILE="$dep_dir/$dep_file"  # <-- expose to custom commands
 pip_quiet_save
 unset PIP_QUIET  # <-- only for conda env export
 echo "$info" "exporting pinned dependencies to '$dep_file'..."
-conda-env export | grep -v "^prefix: " | grep -v "^name: " | grep -v "^$" > "$CPIP_CONDA_LOCKFILE"
+conda-env export | grep -v "^prefix: " | grep -v "^name: " > "$CPIP_CONDA_LOCKFILE"
 pip_quiet_restore
 
 # install pip packages in target environment
