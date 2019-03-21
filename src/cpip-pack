@@ -290,7 +290,8 @@ usage()
         echo "$____" "       $___________ [--version VERSION]"
     fi
     echo     "$____" "       $___________ [--build-tools]"
-    echo     "$____" "       $___________ [--no-dev] [--unlock] [--force]"
+    echo     "$____" "       $___________ [--no-dev] [--extras EXTRAS] [--unlock]"
+    echo     "$____" "       $___________ [--force]"
     echo     "$____" "       $___________ [--color] [--no-color] [--quiet]"
     echo     "$____" "       $___________ [--help]"
 }
@@ -332,6 +333,8 @@ advanced_usage()
     fi
     echo     "$____" "  --build-tools             Install build tools into the final environment."
     echo     "$____" "  --no-dev                  Do not install dev dependencies for Poetry."
+    echo     "$____" "  --extras, -E EXTRAS       Extra sets of dependencies to install for Poetry."
+    echo     "$____" "                            (multiple values allowed)"
     echo     "$____" "  --unlock                  Update Poetry dependencies and ignore lockfile."
     echo     "$____" "  --force                   Overwrite any existing $output at the output path."
     echo     "$____" "  --color                   Force colored output."
@@ -413,6 +416,13 @@ while [[ $# -gt 0 ]]; do
         --no-dev)
             no_dev="$1"
             shift # past argument
+            ;;
+        -E|--extras)
+            [[ $extras ]] && opt_twice_err "--extras"
+            [[ -z $2 ]] && missing_val_err "--extras"
+            extras="$1 $2"
+            shift # past argument
+            shift # past value
             ;;
         --unlock)
             unlock=true
@@ -603,7 +613,7 @@ if [[ $poetry_dir ]]; then
     cd "$poetry_dir"
     save_poetry_lockfile
     [[ $unlock ]] && poetry update --lock $no_dev $quiet $ansi $no_ansi
-    poetry install $no_dev $quiet $ansi $no_ansi
+    poetry install $no_dev $extras $quiet $ansi $no_ansi
     cp "$poetry_lock" "$dep_dir"
     export CPIP_POETRY_LOCKFILE="$dep_dir/$poetry_lock"  # <-- expose to custom commands
     restore_poetry_lockfile
