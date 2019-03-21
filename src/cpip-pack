@@ -612,7 +612,7 @@ if [[ $poetry_dir ]]; then
     echo "$info" "installing pip packages via Poetry..."
     cd "$poetry_dir"
     save_poetry_lockfile
-    [[ $unlock ]] && poetry update --lock $no_dev $extras $quiet $ansi $no_ansi
+    [[ $unlock ]] && poetry update --lock $no_dev $quiet $ansi $no_ansi
     poetry install $no_dev $extras $quiet $ansi $no_ansi
     cp "$poetry_lock" "$dep_dir"
     export CPIP_POETRY_LOCKFILE="$dep_dir/$poetry_lock"  # <-- expose to custom commands
