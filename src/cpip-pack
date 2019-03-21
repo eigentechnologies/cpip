@@ -104,7 +104,8 @@ install_compilers()
         
         # library packages stay, the rest are temporary
         [[ $tmp_pkgs ]] &&
-            tmp_pkgs="$(echo $tmp_pkgs | jq -r '.[]' | grep -v "^lib")"
+            tmp_pkgs="$(echo "$tmp_pkgs" | jq -r '.[]' | grep -v "^lib")"
+        [[ $build_tools ]] && unset tmp_pkgs
 
         set_compiler_env
         compilers_installed=true
@@ -131,11 +132,6 @@ conditional_install_compilers()
     if [[ $build_tools ]] || [[ $pip_install ]] || [[ $poetry_dir ]] || [[ ${#commands[@]} -gt 0 ]]; then
         install_compilers
     fi
-}
-
-conditional_uninstall_compilers()
-{
-    [[ $build_tools ]] || uninstall_compilers
 }
 
 pip_quiet_save()
@@ -559,6 +555,9 @@ unset compilers_installed
 # create and ENTER target environment
 create_and_activate
 
+# install compilers before updating environment <-- very important to follow this order
+conditional_install_compilers
+
 # update the environment 
 for file in "${files[@]}"; do
     conda_env_update
@@ -566,10 +565,6 @@ done
 
 # install pip for Poetry
 [[ $poetry_dir ]] && install_pip
-
-# install and uninstall compilers to obtain proper library packages
-conditional_install_compilers
-conditional_uninstall_compilers
 
 # setup dependencies info output
 dep_name="dependencies"
@@ -584,7 +579,7 @@ export CPIP_CONDA_LOCKFILE="$dep_dir/$dep_file"  # <-- expose to custom commands
 pip_quiet_save
 unset PIP_QUIET  # <-- only for conda env export
 echo "$info" "exporting pinned dependencies to '$dep_file'..."
-conda-env export | grep -v "^prefix: " | grep -v "^name: " > "$CPIP_CONDA_LOCKFILE"
+conda-env export | grep -v "$tmp_pkgs" | grep -v "^prefix: " | grep -v "^name: " > "$CPIP_CONDA_LOCKFILE"
 pip_quiet_restore
 
 # install pip packages in target environment
@@ -597,7 +592,6 @@ if [[ $poetry_dir ]]; then
    
     poetry_dir="$(py_realpath "$poetry_dir")"  # <-- set to absolute path
     unset_pip_local_install
-    install_compilers
     set_poetry_config
 
     # TODO: remove this when Poetry is more capable (see README)
@@ -628,9 +622,8 @@ if [[ $poetry_dir ]]; then
     set_logging "$default_tag"
 fi
 
-conditional_install_compilers
 run_commands
-conditional_uninstall_compilers
+uninstall_compilers
 
 # run conda-pack to package the environment (or create)
 if [[ $create ]]; then
