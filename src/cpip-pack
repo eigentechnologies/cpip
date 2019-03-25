@@ -334,7 +334,6 @@ advanced_usage()
     echo     "$____" "  --build-tools             Install build tools into the final environment."
     echo     "$____" "  --no-dev                  Do not install dev dependencies for Poetry."
     echo     "$____" "  --extras, -E EXTRAS       Extra sets of dependencies to install for Poetry."
-    echo     "$____" "                            (multiple values allowed)"
     echo     "$____" "  --unlock                  Update Poetry dependencies and ignore lockfile."
     echo     "$____" "  --force                   Overwrite any existing $output at the output path."
     echo     "$____" "  --color                   Force colored output."
@@ -421,7 +420,6 @@ while [[ $# -gt 0 ]]; do
             [[ $extras ]] && opt_twice_err "--extras"
             [[ -z $2 ]] && missing_val_err "--extras"
             extras="$1 \"$2\""
-
             shift # past argument
             shift # past value
             ;;
