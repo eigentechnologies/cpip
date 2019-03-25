@@ -420,7 +420,8 @@ while [[ $# -gt 0 ]]; do
         -E|--extras)
             [[ $extras ]] && opt_twice_err "--extras"
             [[ -z $2 ]] && missing_val_err "--extras"
-            extras="$1 $2"
+            extras="$1 \"$2\""
+
             shift # past argument
             shift # past value
             ;;
