@@ -419,7 +419,7 @@ while [[ $# -gt 0 ]]; do
         -E|--extras)
             [[ $extras ]] && opt_twice_err "--extras"
             [[ -z $2 ]] && missing_val_err "--extras"
-            extras="$1 \"$2\""
+            extras=$2
             shift # past argument
             shift # past value
             ;;
@@ -612,7 +612,11 @@ if [[ $poetry_dir ]]; then
     cd "$poetry_dir"
     save_poetry_lockfile
     [[ $unlock ]] && poetry update --lock $no_dev $quiet $ansi $no_ansi
-    poetry install $no_dev $extras $quiet $ansi $no_ansi
+    if [[ $extras ]]; then
+        poetry install $no_dev --extras "$extras" $quiet $ansi $no_ansi
+    else
+        poetry install $no_dev $quiet $ansi $no_ansi
+    fi
     cp "$poetry_lock" "$dep_dir"
     export CPIP_POETRY_LOCKFILE="$dep_dir/$poetry_lock"  # <-- expose to custom commands
     restore_poetry_lockfile
