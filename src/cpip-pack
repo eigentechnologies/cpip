@@ -289,8 +289,8 @@ usage()
     if [[ -z $create ]]; then
         echo "$____" "       $___________ [--version VERSION]"
     fi
+    echo     "$____" "       $___________ [--extra PACKAGE] [--no-dev] [--unlock]"
     echo     "$____" "       $___________ [--build-tools]"
-    echo     "$____" "       $___________ [--no-dev] [--extras EXTRAS] [--unlock]"
     echo     "$____" "       $___________ [--force]"
     echo     "$____" "       $___________ [--color] [--no-color] [--quiet]"
     echo     "$____" "       $___________ [--help]"
@@ -331,10 +331,12 @@ advanced_usage()
     if [[ -z $create ]]; then
         echo "$____" "  --version, -v VERSION     Version number to be included in output $output."
     fi
-    echo     "$____" "  --build-tools             Install build tools into the final environment."
+    echo     "$____" "  --extra, -e PACKAGE       Extra dependency package to install for Poetry."
+    echo     "$____" "                            This option can be used multiple times to specify"
+    echo     "$____" "                            multiple packages."
     echo     "$____" "  --no-dev                  Do not install dev dependencies for Poetry."
-    echo     "$____" "  --extras, -E EXTRAS       Extra sets of dependencies to install for Poetry."
     echo     "$____" "  --unlock                  Update Poetry dependencies and ignore lockfile."
+    echo     "$____" "  --build-tools             Install build tools into the final environment."
     echo     "$____" "  --force                   Overwrite any existing $output at the output path."
     echo     "$____" "  --color                   Force colored output."
     echo     "$____" "  --no-color                Disable colored output."
@@ -364,6 +366,7 @@ missing_val_err()
 }
 
 commands=()
+extras=()
 files=()
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -408,23 +411,22 @@ while [[ $# -gt 0 ]]; do
             shift # past argument
             shift # past value
             ;;
-        --build-tools)
-            build_tools=true
+        -e|--extra)
+            [[ -z $2 ]] && missing_val_err "--extra"
+            extras+=("$2")
             shift # past argument
+            shift # past value
             ;;
         --no-dev)
             no_dev="$1"
             shift # past argument
             ;;
-        -E|--extras)
-            [[ $extras ]] && opt_twice_err "--extras"
-            [[ -z $2 ]] && missing_val_err "--extras"
-            extras=$2
-            shift # past argument
-            shift # past value
-            ;;
         --unlock)
             unlock=true
+            shift # past argument
+            ;;
+        --build-tools)
+            build_tools=true
             shift # past argument
             ;;
         --force)
@@ -612,8 +614,8 @@ if [[ $poetry_dir ]]; then
     cd "$poetry_dir"
     save_poetry_lockfile
     [[ $unlock ]] && poetry update --lock $no_dev $quiet $ansi $no_ansi
-    if [[ $extras ]]; then
-        poetry install $no_dev --extras "$extras" $quiet $ansi $no_ansi
+    if [[ ${#extras[@]} -gt 0 ]]; then
+        poetry install $no_dev $quiet $ansi $no_ansi --extras "$(echo ${extras[@]})"
     else
         poetry install $no_dev $quiet $ansi $no_ansi
     fi
