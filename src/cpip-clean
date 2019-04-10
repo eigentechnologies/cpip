@@ -87,6 +87,7 @@ if [[ $arg_count -eq 0 ]]; then
 fi
 
 # exit as soon as a command fails and print error
+set -E
 trap err_trap  ERR SIGHUP SIGINT SIGQUIT SIGTERM
 
 conda_initiate

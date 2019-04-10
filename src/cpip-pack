@@ -511,6 +511,7 @@ if [[ -z $force ]]; then
 fi
 
 # exit as soon as a command fails and print error
+set -E
 trap err_trap  ERR SIGHUP SIGINT SIGQUIT SIGTERM
 trap exit_trap EXIT
 
