@@ -25,7 +25,7 @@ given `conda` environment files
 - macOS
 
 ## System Requirements
-- [conda](https://conda.io/docs/) (version 4.5.11 or higher)
+- [conda](https://conda.io/docs/) (version 4.6 or higher)
 - [poetry](https://poetry.eustace.io/docs/) (optional)
 
 ## Environment Dependencies
@@ -35,16 +35,22 @@ given `conda` environment files
 
 ## Usage
 
-### 1) Create Build Environment
-`conda env create`
+### 1) Update Conda
+`conda update -n base -c defaults conda`
 
-### 2) Activate Build Environment
+### 2) Update Terminal Environment
+`conda init` + restart terminal
+
+### 3) Create Build Environment
+`conda env create` from base of `cpip` directory
+
+### 4) Activate Build Environment
 `conda activate cpip`
 
-### 3) Run 'cpip pack' or 'cpip create'
+### 5) Run 'cpip pack' or 'cpip create'
 For more information: `cpip pack --help` or `cpip create --help`
 
-### 4) Unpack and Activate
+### 6) Unpack and Activate
     Initial Setup (if using 'cpip pack'):
       1. untar archive        --> tar -xf <archive>
       2. activate environment --> source <env-root>/bin/activate

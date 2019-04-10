@@ -3,7 +3,7 @@ channels:
 - defaults
 - conda-forge
 dependencies:
-- conda>=4.5.11  # <-- reflect this requirement in the README
+- conda>=4.6  # <-- reflect this requirement in the README
 - conda-pack
 - jq==1.6
 - python>=3.5
