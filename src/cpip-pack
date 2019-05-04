@@ -127,13 +127,6 @@ uninstall_compilers()
     fi
 }
 
-conditional_install_compilers()
-{
-    if [[ $build_tools ]] || [[ $pip_install ]] || [[ $poetry_dir ]] || [[ ${#commands[@]} -gt 0 ]]; then
-        install_compilers
-    fi
-}
-
 pip_quiet_save()
 {
     [[ $PIP_QUIET ]] && pip_quiet="$PIP_QUIET"
@@ -569,7 +562,7 @@ unset compilers_installed
 create_and_activate
 
 # install compilers before updating environment <-- very important to follow this order
-conditional_install_compilers
+install_compilers
 
 # update the environment 
 for file in "${files[@]}"; do

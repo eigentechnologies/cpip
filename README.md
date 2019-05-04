@@ -81,9 +81,10 @@ move ALL `pip` dependencies from the `conda` environment file(s) to
 a `poetry` project file.
 
 ### Cross-Compilers
-Cross-compilers will be installed if any `pip` dependencies are
-detected, or the `--command` option is used. They will always be
-uninstalled automatically before the environment is finalized.
+Cross-compilers will be installed and uninstalled automatically,
+leaving behind only the associated compiler libraries. However,
+with the `--build-tools` flag, the cross-compilers will be left
+in the final environment as well.
 
 The cross-compilers used are Anaconda compiler tools
 (see [here](https://conda.io/docs/user-guide/tasks/build-packages/compiler-tools.html)).
