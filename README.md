@@ -129,9 +129,7 @@ the command line. Different command line orders may produce
 slightly different environments.
 
 ### Conda Configuration
-The only change made to the configuration is that `defaults`
-is removed from the `channels` key in order to enforce better
-consistency. Changing other settings may yield unexpected results.
+Changing certain configuration values may yield unexpected results.
 
 ### Poetry Configuration
 `cpip pack` internally sets `settings.virtualenvs.create` to `false`,

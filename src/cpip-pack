@@ -21,9 +21,6 @@ create_and_activate()
     # create and ENTER target environment
     conda_env_create
     conda activate "$env"
-
-    # remove 'defaults' for to enforce consistency
-    conda config --env --remove channels defaults
 }
 
 set_compiler_env()
