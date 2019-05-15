@@ -35,22 +35,35 @@ given `conda` environment files
 
 ## Usage
 
-### 1) Update Conda
+### 1) Add cpip to the PATH variable
+
+The command below will add `cpip` to your `PATH` variable;
+make sure to substitute `<cpip_repository>` for the absolute path
+of the `cpip` repository.
+
+`export PATH=<cpip_repository>/bin>:$PATH`
+
+To keep this configuration every time you open a new shell,
+make sure to add this command to your shell configuration file.
+- for login `bash` shells this will be `~/.bash_profile`
+- for non-login `bash` shells this will be `~/.bashrc`
+
+### 2) Update Conda
 `conda update -n base -c defaults conda`
 
-### 2) Update Terminal Environment
+### 3) Update Terminal Environment
 `conda init` + restart terminal
 
-### 3) Create Build Environment
+### 4) Create Build Environment
 `conda env create` from base of `cpip` directory
 
-### 4) Activate Build Environment
+### 5) Activate Build Environment
 `conda activate cpip`
 
-### 5) Run 'cpip pack' or 'cpip create'
+### 6) Run 'cpip pack' or 'cpip create'
 For more information: `cpip pack --help` or `cpip create --help`
 
-### 6) Unpack and Activate
+### 7) Unpack and Activate
     Initial Setup (if using 'cpip pack'):
       1. untar archive        --> tar -xf <archive>
       2. activate environment --> source <env-root>/bin/activate
