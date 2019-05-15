@@ -188,26 +188,6 @@ restore_poetry_config()
     fi
 }
 
-save_poetry_lockfile()
-{
-    if [[ $poetry_dir ]]; then
-        cd "$poetry_dir"
-        poetry_lock_backup="$poetry_lock.bak"
-        cp "$poetry_lock" "$poetry_lock_backup"
-        cd -
-    fi
-}
-
-restore_poetry_lockfile()
-{
-    if [[ $poetry_lock_backup ]]; then
-        cd "$poetry_dir"
-        mv "$poetry_lock_backup" "$poetry_lock"
-        unset poetry_lock_backup
-        cd -
-    fi
-}
-
 make_temp()
 {
     temp_dir=$(mktemp -d)
@@ -239,7 +219,6 @@ run_commands()
 exit_trap()
 {
     restore_poetry_config
-    restore_poetry_lockfile
     remove_temp
 }
 
@@ -336,7 +315,7 @@ advanced_usage()
     echo     "$____" "                            This option can be used multiple times to specify"
     echo     "$____" "                            multiple packages."
     echo     "$____" "  --no-dev                  Do not install dev dependencies for Poetry."
-    echo     "$____" "  --unlock                  Update Poetry dependencies and ignore lockfile."
+    echo     "$____" "  --unlock                  Update Poetry dependencies and overwrite lockfile."
     echo     "$____" "  --build-tools             Install build tools into the final environment."
     echo     "$____" "  --force                   Overwrite any existing $output at the output path."
     echo     "$____" "  --color                   Force colored output."
@@ -614,7 +593,6 @@ if [[ $poetry_dir ]]; then
     # install pip packages
     echo "$info" "installing pip packages via Poetry..."
     cd "$poetry_dir"
-    save_poetry_lockfile
     [[ $unlock ]] && poetry update --lock $no_dev $quiet $ansi $no_ansi
     if [[ ${#extras[@]} -gt 0 ]]; then
         poetry install $no_dev $quiet $ansi $no_ansi --extras "$(echo ${extras[@]})"
@@ -623,7 +601,6 @@ if [[ $poetry_dir ]]; then
     fi
     cp "$poetry_lock" "$dep_dir"
     export CPIP_POETRY_LOCKFILE="$dep_dir/$poetry_lock"  # <-- expose to custom commands
-    restore_poetry_lockfile
     cd -
 
     restore_poetry_config
