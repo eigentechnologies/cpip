@@ -35,9 +35,9 @@ given `conda` environment files
 
 ## Usage
 
-### 1) Add cpip to the PATH variable
+### 1) Add cpip to your PATH environment variable
 
-The command below will add `cpip` to your `PATH` variable;
+The command below will add `cpip` to your `PATH` environment variable;
 make sure to substitute `<cpip_repository>` for the absolute path
 of the `cpip` repository.
 
