@@ -221,12 +221,6 @@ exit_trap()
 
 complete_msg()
 {
-    if [[ $poetry_dir ]]; then
-        local poetry_lockfile="'$name/$dep_name/$poetry_lock'"
-    else
-        local poetry_lockfile="NOT_APPLICABLE"
-    fi
-
     if [[ $create ]]; then
         echo "$info" "Complete! Environment is now installed in '$output'"
         echo "$help" "[Instructions]"
@@ -251,10 +245,6 @@ complete_msg()
         echo "$____" "    *  activate             --> source \"$name/bin/activate\""
         echo "$____" "    *  deactivate           --> source deactivate"
     fi
-    echo     "$____"
-    echo     "$____" "  Info:"
-    echo     "$____" "    *  conda lockfile         @ '$name/$dep_name/$dep_file'"
-    echo     "$____" "    *  poetry lockfile        @ $poetry_lockfile"
 }
 
 usage()
@@ -555,22 +545,6 @@ done
 # install pip for Poetry
 [[ $poetry_dir ]] && install_pip
 
-# setup dependencies info output
-dep_name="dependencies"
-dep_dir="$CONDA_PREFIX/$dep_name"
-dep_file="$name.yml"
-poetry_lock="poetry.lock"
-mkdir -p "$dep_dir"
-
-export CPIP_CONDA_LOCKFILE="$dep_dir/$dep_file"  # <-- expose to custom commands
-
-# export environment to .yml file
-pip_quiet_save
-unset PIP_QUIET  # <-- only for conda env export
-echo "$info" "exporting pinned dependencies to '$dep_file'..."
-conda-env export | grep -v "$tmp_pkgs" | grep -v "^prefix: " | grep -v "^name: " > "$CPIP_CONDA_LOCKFILE"
-pip_quiet_restore
-
 # install pip packages in target environment
 if [[ $poetry_dir ]]; then
     poetry_install="${bold}[${green}poetry-install${reset}${bold}]${reset}"
@@ -596,8 +570,6 @@ if [[ $poetry_dir ]]; then
     else
         poetry install $no_dev $quiet $ansi $no_ansi
     fi
-    cp "$poetry_lock" "$dep_dir"
-    export CPIP_POETRY_LOCKFILE="$dep_dir/$poetry_lock"  # <-- expose to custom commands
     cd -
 
     restore_poetry_config

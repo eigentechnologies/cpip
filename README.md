@@ -73,10 +73,6 @@ For more information: `cpip pack --help` or `cpip create --help`
       *  activate             --> source <env-root>/bin/activate
       *  deactivate           --> source deactivate
 
-    Info:
-      *  conda dependencies     @ <env-root>/dependencies/<env-name>.yml
-      *  poetry lockfile        @ <env-root>/dependencies/poetry.lock
-
 **NOTE:** It's possible to change the path of `<env-root>` after
 untarring, as long that is done prior to running `conda-unpack`.
 
@@ -117,10 +113,6 @@ want to run while the environment is active. `cpip` will ensure that
 cross-compilers are installed in the environment, so that the build
 environment for running commands is consistent with the build environment
 for compiling `pip` packages.
-
-The following are internal environment variables available to the commands:
-- `CPIP_CONDA_LOCKFILE`   <-- path to `conda` lockfile
-- `CPIP_POETRY_LOCKFILE`  <-- path to `poetry` lockfile
 
 ### Order of Environments
 This tool can take more than one `conda` environment file.
