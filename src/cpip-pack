@@ -173,8 +173,8 @@ install_pip()
 
 get_poetry_major_version()
 {
-    poetry_major_version=$(poetry --version | awk '{print $3}' | cut -f1 -d '.')
-    poetry_major_version=${poetry_major_version:-0}
+    poetry_major_version="$(poetry --version | awk '{print $3}' | cut -f1 -d '.')"
+    poetry_major_version="${poetry_major_version:-0}"
 }
 
 set_poetry_config()
