@@ -99,6 +99,7 @@ if [[ $OSTYPE == "linux-gnu" ]]; then
     cc_pkg="gcc_linux-64"
     cxx_pkg="gxx_linux-64"
     gfortran_pkg="gfortran_linux-64"
+    ld_impl="ld_impl_linux-64"
     swig_pkg="swig"
     linux=true
 elif [[ $OSTYPE == "darwin"* ]]; then
