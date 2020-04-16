@@ -73,7 +73,7 @@ install_compilers()
         fi
 
         # install compilers
-        local pkgs=("$cc_pkg" "$cxx_pkg" "$gfortran_pkg" "$swig_pkg")
+        local pkgs=("$cc_pkg" "$cxx_pkg" "$gfortran_pkg" "$swig_pkg" "$ld_impl")
         local pkg_diff="$(conda install --override-channels -c anaconda ${pkgs[@]} --no-update-deps --json --quiet)"
         local install_error="$(echo "$pkg_diff" | jq -r '.error')"
         if [[ $install_error != "null" ]]; then
