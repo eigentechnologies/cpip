@@ -99,9 +99,9 @@ install_compilers()
         [[ $add ]] && [[ $sub ]] &&
             tmp_pkgs="$(jq_diff "$add" "$sub")"
 
-        # library packages stay, the rest are temporary
+        # library packages and pcre stay, the rest are temporary
         [[ $tmp_pkgs ]] &&
-            tmp_pkgs="$(echo "$tmp_pkgs" | jq -r '.[]' | grep -v "^lib")"
+            tmp_pkgs="$(echo "$tmp_pkgs" | jq -r '.[]' | grep -v "^lib\|^pcre")"
         [[ $build_tools ]] && unset tmp_pkgs
 
         set_compiler_env
