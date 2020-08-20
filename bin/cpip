@@ -101,12 +101,14 @@ if [[ $OSTYPE == "linux-gnu" ]]; then
     gfortran_pkg="gfortran_linux-64"
     ld_impl="ld_impl_linux-64"
     swig_pkg="swig"
+    pkg_config="pkg-config"
     linux=true
 elif [[ $OSTYPE == "darwin"* ]]; then
     cc_pkg="clang_osx-64"
     cxx_pkg="clangxx_osx-64"
     gfortran_pkg="gfortran_osx-64"
     swig_pkg="swig"
+    pkg_config="pkg-config"
     macos=true
 else
     >&2 echo "$error" "OS not supported!"
