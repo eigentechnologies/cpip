@@ -74,7 +74,7 @@ install_compilers()
 
         # install compilers
         local pkgs=("$cc_pkg" "$cxx_pkg" "$gfortran_pkg" "$swig_pkg" "$ld_impl" "$pkg_config")
-        local pkg_diff="$(conda install --override-channels -c anaconda ${pkgs[@]} --no-update-deps --json --quiet)"
+        local pkg_diff="$(conda install --override-channels -c anaconda conda-forge ${pkgs[@]} --no-update-deps --json --quiet)"
         local install_error="$(echo "$pkg_diff" | jq -r '.error')"
         if [[ $install_error != "null" ]]; then
             >&2 echo -e "$error" "$install_error"
@@ -167,7 +167,7 @@ install_pip()
 {
     if [[ $(conda list --json | jq -r '.[].name' | grep "^pip$" | wc -l) -eq 0 ]]; then
         echo "$info" "pip is missing from conda environment, installing..."
-        conda install --override-channels -c anaconda pip --no-update-deps --yes $quiet $log_quiet
+        conda install --override-channels -c anaconda conda-forge pip --no-update-deps --yes $quiet $log_quiet
     fi
 }
 
