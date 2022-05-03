@@ -215,6 +215,19 @@ remove_temp()
     fi
 }
 
+run_post_conda_commands()
+{
+    index=1
+    for cmd in "${post_conda_commands[@]}"; do
+        command_tag="${bold}[${blue}command ($index of ${#post_conda_commands[@]})${reset}${bold}]${reset}"
+        set_logging "$default_tag $command_tag"
+        echo "$info" "running '$cmd'..."
+        (eval "$cmd")
+        ((++index))
+    done
+    set_logging "$default_tag"
+}
+
 run_commands()
 {
     index=1
@@ -266,6 +279,7 @@ usage()
 {
     echo     "$help" "usage: $script_name --name PROJECT [--file FILE]..."
     echo     "$____" "       $___________ [--poetry DIR] [--output DIR]"
+    echo     "$____" "       $___________ [--post-conda-command COMMAND]..."
     echo     "$____" "       $___________ [--command COMMAND]..."
     if [[ -z $create ]]; then
         echo "$____" "       $___________ [--version VERSION]"
@@ -294,38 +308,42 @@ advanced_usage()
     echo     "$____"
 
     echo     "$____" "required arguments:"
-    echo     "$____" "  --name, -n PROJECT            Name of the project. Will be used for the name in"
-    echo     "$____" "                                the output $output."
+    echo     "$____" "  --name, -n PROJECT                  Name of the project. Will be used for the name in"
+    echo     "$____" "                                      the output $output."
     echo     "$____"
     echo     "$____" "optional arguments:"
-    echo     "$____" "  --file, -f FILE               Conda environment file. This option can be used"
-    echo     "$____" "                                multiple times to specify multiple files. The"
-    echo     "$____" "                                environment will be updated in the order that they"
-    echo     "$____" "                                are given on the command line."
-    echo     "$____" "  --poetry, -p DIR              Poetry project directory."
-    echo     "$____" "  --output, -o DIR              Directory where the final $output will go."
-    echo     "$____" "                                Otherwise, $output will be ouputed to the current"
-    echo     "$____" "                                working directory."
-    echo     "$____" "  --command, -c COMMAND         Command to run after the environment is setup."
-    echo     "$____" "                                This option can be used multiple times to specify"
-    echo     "$____" "                                multiple commands to run. They will be ran in the"
-    echo     "$____" "                                order that they are given on the command line."
+    echo     "$____" "  --file, -f FILE                     Conda environment file. This option can be used"
+    echo     "$____" "                                      multiple times to specify multiple files. The"
+    echo     "$____" "                                      environment will be updated in the order that they"
+    echo     "$____" "                                      are given on the command line."
+    echo     "$____" "  --poetry, -p DIR                    Poetry project directory."
+    echo     "$____" "  --output, -o DIR                    Directory where the final $output will go."
+    echo     "$____" "                                      Otherwise, $output will be ouputed to the current"
+    echo     "$____" "                                      working directory."
+    echo     "$____" "  --post-conda-command, -p COMMAND    Command to run after the conda environment is setup."
+    echo     "$____" "                                      This option can be used multiple times to specify"
+    echo     "$____" "                                      multiple commands to run. They will be ran in the"
+    echo     "$____" "                                      order that they are given on the command line."
+    echo     "$____" "  --command, -c COMMAND               Command to run after the environment is setup."
+    echo     "$____" "                                      This option can be used multiple times to specify"
+    echo     "$____" "                                      multiple commands to run. They will be ran in the"
+    echo     "$____" "                                      order that they are given on the command line."
     if [[ -z $create ]]; then
-        echo "$____" "  --version, -v VERSION         Version number to be included in output $output."
+        echo "$____" "  --version, -v VERSION               Version number to be included in output $output."
     fi
-    echo     "$____" "  --extra, -e PACKAGE           Extra dependency package to install for Poetry."
-    echo     "$____" "                                This option can be used multiple times to specify"
-    echo     "$____" "                                multiple packages."
-    echo     "$____" "  --no-dev                      Do not install dev dependencies for Poetry."
-    echo     "$____" "  --ignore-editable-packages    Ignore any editable packages installed in the"
-    echo     "$____" "                                environment when packing."
-    echo     "$____" "  --unlock                      Update Poetry dependencies and overwrite lockfile."
-    echo     "$____" "  --build-tools                 Install build tools into the final environment."
-    echo     "$____" "  --force                       Overwrite any existing $output at the output path."
-    echo     "$____" "  --color                       Force colored output."
-    echo     "$____" "  --no-color                    Disable colored output."
-    echo     "$____" "  --quiet, -q                   Suppress output for subprocesses."
-    echo     "$____" "  --help, -h                    Show this help message then exit."
+    echo     "$____" "  --extra, -e PACKAGE                 Extra dependency package to install for Poetry."
+    echo     "$____" "                                      This option can be used multiple times to specify"
+    echo     "$____" "                                      multiple packages."
+    echo     "$____" "  --no-dev                            Do not install dev dependencies for Poetry."
+    echo     "$____" "  --ignore-editable-packages          Ignore any editable packages installed in the"
+    echo     "$____" "                                      environment when packing."
+    echo     "$____" "  --unlock                            Update Poetry dependencies and overwrite lockfile."
+    echo     "$____" "  --build-tools                       Install build tools into the final environment."
+    echo     "$____" "  --force                             Overwrite any existing $output at the output path."
+    echo     "$____" "  --color                             Force colored output."
+    echo     "$____" "  --no-color                          Disable colored output."
+    echo     "$____" "  --quiet, -q                         Suppress output for subprocesses."
+    echo     "$____" "  --help, -h                          Show this help message then exit."
 }
 
 opt_twice_err()
@@ -349,6 +367,7 @@ missing_val_err()
     exit 1
 }
 
+post_conda_commands=()
 commands=()
 extras=()
 files=()
@@ -378,6 +397,12 @@ while [[ $# -gt 0 ]]; do
             [[ $output_dir ]] && opt_twice_err "--output"
             [[ -z $2 ]] && missing_val_err "--output"
             output_dir="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        --post-conda-command)
+            [[ -z $2 ]] && missing_val_err "--post-conda-command"
+            post_conda_commands+=("$2")
             shift # past argument
             shift # past value
             ;;
@@ -562,6 +587,8 @@ conditional_install_compilers
 for file in "${files[@]}"; do
     conda_env_update
 done
+
+run_post_conda_commands
 
 # install pip for Poetry
 [[ $poetry_dir ]] && install_pip
