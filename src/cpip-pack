@@ -320,7 +320,7 @@ advanced_usage()
     echo     "$____" "  --output, -o DIR                    Directory where the final $output will go."
     echo     "$____" "                                      Otherwise, $output will be ouputed to the current"
     echo     "$____" "                                      working directory."
-    echo     "$____" "  --post-conda-command, -p COMMAND    Command to run after the conda environment is setup."
+    echo     "$____" "  --post-conda-command COMMAND        Command to run after the conda environment is setup."
     echo     "$____" "                                      This option can be used multiple times to specify"
     echo     "$____" "                                      multiple commands to run. They will be ran in the"
     echo     "$____" "                                      order that they are given on the command line."
