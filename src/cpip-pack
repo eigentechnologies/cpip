@@ -101,7 +101,7 @@ install_compilers()
 
         # library packages and pcre stay, the rest are temporary
         [[ $tmp_pkgs ]] &&
-            tmp_pkgs="$(echo "$tmp_pkgs" | jq -r '.[]' | grep -v "^lib\|^pcre")"
+            tmp_pkgs="$(echo "$tmp_pkgs" | jq -r '.[]' | grep -v "^_\|^lib\|^pcre")"
         [[ $build_tools ]] && unset tmp_pkgs
 
         set_compiler_env
