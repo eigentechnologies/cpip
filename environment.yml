@@ -6,5 +6,4 @@ dependencies:
 - conda>=4.6  # <-- reflect this requirement in the README
 - conda-pack
 - jq==1.6
-- python>=3.7,<3.9
-
+- python>3.7,<3.9
