@@ -96,10 +96,10 @@ set_logging "$default_tag"
 
 # check os to find the right compilers
 if [[ $OSTYPE == "linux-gnu" ]]; then
-    cc_pkg="gcc_linux-64==7.2.0"
-    cxx_pkg="gxx_linux-64==7.2.0"
-    gfortran_pkg="gfortran_linux-64==7.2.0"
-    ld_impl="ld_impl_linux-64==2.33.1"
+    cc_pkg="gcc_linux-64==11.2.0"
+    cxx_pkg="gxx_linux-64==11.2.0"
+    gfortran_pkg="gfortran_linux-64==11.2.0"
+    ld_impl="ld_impl_linux-64==2.38"
     swig_pkg="swig==4.0.2"
     pkg_config="pkg-config==0.29.2"
     linux=true
