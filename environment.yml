@@ -1,9 +1,10 @@
 name: cpip
 channels:
-  - defaults
-  - conda-forge
+- defaults
+- conda-forge
 dependencies:
-  - conda>=4.6  # <-- reflect this requirement in the README
-  - conda-pack>=0.7.0
-  - jq==1.6
-  - python>=3.8,<3.9
+- conda>=4.6  # <-- reflect this requirement in the README
+- conda-pack
+- jq==1.6
+- python>=3.5,<3.8
+

@@ -643,8 +643,7 @@ uninstall_compilers
 if [[ $create ]]; then
     echo "$info" "packaging environment via conda-pack..."
     make_temp
-    # TODO: ENG-19089 replace --ignore-editable-packages and --ignore-missing-files flags with a more specific list of files to ignore.
-    conda-pack -o "$temp_file" -d "$output" --arcroot "$name" --compress-level 0 $force $quiet $log_quiet $ignore_editable --ignore-editable-packages --ignore-missing-files
+    conda-pack -o "$temp_file" -d "$output" --arcroot "$name" --compress-level 0 $force $quiet $log_quiet $ignore_editable
     cd "$output_dir"
     echo "$info" "unpacking environment..."
     [[ $force ]] && rm -rf "$output"
@@ -653,8 +652,7 @@ if [[ $create ]]; then
     cd -
 else
     echo "$info" "packaging environment via conda-pack..."
-    # TODO: ENG-19089 replace --ignore-editable-packages and --ignore-missing-files flags with a more specific list of files to ignore.
-    conda-pack -o "$output" --arcroot "$name" $force $quiet $log_quiet $ignore_editable --ignore-editable-packages --ignore-missing-files
+    conda-pack -o "$output" --arcroot "$name" $force $quiet $log_quiet $ignore_editable
 fi
 
 complete_msg
